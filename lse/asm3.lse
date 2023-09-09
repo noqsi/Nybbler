@@ -1,0 +1,19 @@
+# Assembler master
+
+# machine word size
+
+3 %nybbles :constant
+
+" toolkit.lse" load
+" errors.lse" load
+" asm.lse" load
+
+# Full instruction space image
+
+1 %nybbles 4 * << ispace :array
+
+ispace ;pc_offset !
+
+{dump} : ;t @++ ,h " 	" ,t ;s @@+ ,h nl
+
+dump : ispace ;s ! 0 ;t ! ;pc @ {dump} iterate
