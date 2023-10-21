@@ -7,16 +7,40 @@
 
 ## Data model
 
+For any implementation, binary data comes in words whose size is a fixed multiple of four bits. 8, 12, 16, 20, ... bit implementations are possible. 4 bits is logically possible but unlikely to be useful. Instruction and data words are the same size.
+
+Data encoding is modular two's complement binary. Addresses and literal data embedded within instruction words are sign-extended when used.
+
+## Memory model
+
+Data and instruction memory spaces are separate. Memory is addressed as words of the implementation's fixed size.
+
+### Registers
+
+Address | Name | Function
+------- | ---- | --------
+-1	| sp | Stack pointer
+-2 | cst | Call stack top
+-3 | csp | Call stack pointer
+-4 | carry | Carry bit
+-5 | except	| Exception state/mask
+-6 | iodat	| I/O data
+-7 | iostat	| I/O device status
+-8 | iosel | Select I/O device
+
+
 ## Instruction Encoding
 
+Instructions are encoded as four bits (nybbles), packed into instruction word. When an instruction word is executed, all instructions in the word are executed in sequence. There is an exception to this rule: if the instruction word contains a **tsz** instruction, instructions following the **tsz** will be conditionally skipped.
 
+*Long* instructions take the remaining nybbles of the instruction word as an operand. If the long instruction is in the last nybble of an instruction word, it takes the entire following word as its operand.
  
 ## Opcodes
 Hex | ASM | LSE | S/L | Summary
 -------- | ----- | ---- | ------ | ----
 0 | nop	| {} | S | No operation
 1 | return | ] | S | Return from function
-2 | tsz | (if) | S | Test, skip if zero
+2 | snz | (ifz) | S | Skip if nonzero
 3 | half | 2/ | S | Divide TOS by two
 4 | add	| + | S | Add TOS to NOS
 5 | neg	| neg | S | Negate TOS
@@ -36,9 +60,8 @@ F | extend | extend | L | Undefined: for future extensions
 This does nothing. Its principal use is to fill out unused nybbles in instruction words.
 ### return ]
 Return from function. Pops the return address from the return stack into the PC.
-### tsz (if)
-If TOS is zero, skip the remaining instructions in the instruction word. TOS is dropped. If the last nybble of the word holds a long instruction, also increment the PC to skip over its operand. If *tsz* is the last instruction in a word, it drops the TOS with no other effect.
- 
+### if
+If TOS is zero, skip the next instruction. TOS is dropped. 
 ### half 2/
 Shift the TOS right by one. The most significant bit is unchanged. This is thus a signed divide by 2. The least significant bit shifts into the **carry** register.
 ### add +
@@ -72,6 +95,6 @@ Instructions **call**, **return**, and **jump**, control the processor's executi
 ## Examples
 
 ```
-2way
-	return tsz jump
+drop
+	if nop return
 ```
