@@ -1,9 +1,19 @@
 #define NYBBLES 4		// 16 bit implementation
 typedef nybble uint8_t;		// since there isn't a uint4_t
-typedef word uint16_t;
+typedef word int16_t;
 typedef extword int32_t;	// extended word
 #define CARRY_BIT( xw ) ( (xw) & 0x10000 )
 #define WORD( xw ) ( (xw) & 0xffff )
+
+// Processor register addresses
+
+#define SP (-9)
+#define CST (-10)
+#define CSP (-11)
+#define CARRY (-12)
+#define EXCEPT (-13)
+#define XIO (-14)
+
 
 // processor state
 
@@ -46,7 +56,7 @@ word fetch( void )
 	}
 }
 
-// Processor and I/O register support
+// Memory and I/O register support
 
 word load_reg( word addr ){
 	
