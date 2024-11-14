@@ -1,0 +1,37 @@
+Pin	Func	GPIO
+7	ICE	4
+8	UART	14
+10	UART	15
+11	PP8	17
+12	PP7	18
+13	ICE	27
+15	PP6	22
+16	PP5	23
+18	BL	24
+19	PP4	10
+21	PP3	9
+22	BL	25
+23	
+24	ICE	8
+26	PP2	7
+27	ID	0
+28	ID	1
+29	ICE	5
+31	ICE	6
+32	ICE	12
+33	ICE	13
+35	PP1	19
+36	PP0	16
+37	ICE	26
+38	PPDIR	20
+40	PPCLK	21
+
+
+
+
+UART	support FPGA
+BL	button and support FPGA
+PP	parallel port in icoprog
+ID	ID ROM?
+
+For the PP, the icoprog convention is that PPDIR is low to read from FPGA, high to write. If PPDIR is low, the FPGA should drive the PP data bits. Pulsing PPCLK high acknowledges receipt of the data by the Pi. To transfer from he Pi to the FPGA, first drive PPDIR high, drive the data bits, then pulse PPCLK high to indicate data is available.
