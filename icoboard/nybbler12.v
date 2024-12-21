@@ -106,33 +106,48 @@ module top (
                 .D_OUT_0(d_to_pi),
                 .D_IN_0(d_from_pi)
         );
-
-	reg [7:0] rr;
 	
-	always @(posedge clk) if( pi_clk_sync && !pi_dir ) rr <= d_from_pi;
+// Registers
+
+// The "register register" selects which register is to be written/read
+// by the host.
+
+	reg [3:0] rr;
+	
+// Address and data registers for host peek/poke
+
+	reg [11:0] ar, dr;
+	
+	always @(posedge clk) begin
+		if( pi_clk_sync && !pi_dir ) begin
+			if( !pi_regsel ) rr <= d_from_pi;
+			else case ( rr )
+			
+				0 : ar[7:0] <= d_from_pi;
+			
+				1 : ar[11:8] <= d_from_pi;
+			
+				2 : dr[7:0] <= d_from_pi;
+			
+				3 : dr[11:8] <= d_from_pi;
+				
+			endcase
+		end
+	end
 	
 	assign d_to_pi = rr;
+
+// Monitor LEDs
+
+	assign {pmod1_10, pmod1_9, pmod1_8, pmod1_7} = rr;
 	
-	assign pmod4_4 = 0;
-	
-	assign {pmod1_10, pmod1_9, pmod1_8, pmod1_7,
-		pmod1_4, pmod1_3, pmod1_2, pmod1_1 } = rr;
-	
-//	assign {pmod2_10, pmod2_9, pmod2_8, pmod2_7,
-//		pmod2_4, pmod2_3, pmod2_2, pmod2_1 } = {pi_d7, pi_d6, pi_d5, pi_d4,
-//			 pi_d3, pi_d2, pi_d1, pi_d0};
+	assign {pmod1_4, pmod1_3, pmod1_2, pmod1_1,
+		pmod2_10, pmod2_9, pmod2_8, pmod2_7,
+		pmod2_4, pmod2_3, pmod2_2, pmod2_1 } = ar;
 		
-	assign {pmod3_10, pmod3_9, pmod3_8, pmod3_7,
-		pmod3_4, pmod3_3, pmod3_2, pmod3_1 } = d_from_pi;
-	
-	assign pmod4_1 = pi_regsel;
-	assign pmod4_2 = pi_dir;
-	assign pmod4_3 = pi_clk;
-	assign pmod4_10= clk;
-	assign {pmod4_9, pmod4_8} = pi_sync;
-	assign pmod4_7 = pi_clk_sync;
-	
-	
-	
+	assign {pmod4_7, pmod4_8, pmod4_9, pmod4_10,
+		pmod3_1, pmod3_2, pmod3_3, pmod3_4,
+		pmod3_7, pmod3_8, pmod3_9, pmod3_10 } = dr;
+		
 	
 endmodule
