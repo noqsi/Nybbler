@@ -1,0 +1,25 @@
+" ico" loadmod
+
+0 AR0 :constant
+1 AR1 :constant
+2 DR0 :constant
+3 DR1 :constant
+
+# r reg-get yields n
+reg-get : 0 ico-put 1 ico-get
+
+# n r reg-put yields nothing
+reg-put : 0 ico-put 1 ico-put
+
+# ar-get yields n
+ar-get :  AR0 reg-get AR1 reg-get 256 * +
+
+# n ar-put yields nothing
+ar-put : dup AR0 reg-put 256 / AR1 reg-put
+
+# dr-get yields n
+dr-get :  DR0 reg-get DR1 reg-get 256 * +
+
+# n dr-put yields nothing
+dr-put : dup DR0 reg-put 256 / DR1 reg-put
+

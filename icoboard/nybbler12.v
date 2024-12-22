@@ -94,7 +94,8 @@ module top (
 // Parallel port
 
 
-	wire [7:0] d_to_pi, d_from_pi;
+	wire [7:0] d_from_pi;
+	reg [7:0] d_to_pi;
 	
 	SB_IO #(
                 .PIN_TYPE(6'b 1010_01),
@@ -119,12 +120,25 @@ module top (
 	reg [11:0] ar, dr;
 	
 	always @(posedge clk) begin
-		if( pi_clk_sync && !pi_dir ) begin
+		if( pi_dir )		// output to Pi
+			if( !pi_regsel ) d_to_pi <= rr;
+			else case ( rr )
+				
+				0 : d_to_pi <= ar[7:0];
+					
+				1 : d_to_pi <= ar[11:8];
+					
+				2 : d_to_pi <= dr[7:0];
+					
+				3 : d_to_pi <= dr[11:8];
+					
+			endcase
+		else if( pi_clk_sync )
 			if( !pi_regsel ) rr <= d_from_pi;
 			else case ( rr )
 			
 				0 : ar[7:0] <= d_from_pi;
-			
+		
 				1 : ar[11:8] <= d_from_pi;
 			
 				2 : dr[7:0] <= d_from_pi;
@@ -132,10 +146,8 @@ module top (
 				3 : dr[11:8] <= d_from_pi;
 				
 			endcase
-		end
 	end
 	
-	assign d_to_pi = rr;
 
 // Monitor LEDs
 
