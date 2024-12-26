@@ -80,30 +80,20 @@ void execute( nybble opcode )
 		break;
 		
 	case 2:		// tsz
-		if( ns[ nsp-- ] == 0 ) {
-		    if((iword & 0x8888 ) == 0x8 )   // long instruction in last slot
-		        pc += 1;
-		    nybcount = 0;   // skip remaining instructions in word
+		if( ns[ nsp-- ] == 0 ) pc += 1;
 		break;
 	
-	case 3: 	// rs
-		carry = ns[ nsp ] & 1;
+	case 3: 	// half
 		ns[ nsp ] = ns[ nsp ] >> 1
 		break;
 		
 	case 4:		// add
 		temp = ns[ nsp-- ];
-		temp += ns[ nsp ];
-		if( CARRY_BIT( temp )) carry = 1;
-		else carry = 0;
-		ns[ nsp ] = WORD( temp );
+		ns[ nsp ] += temp;
 		break;
 		
 	case 5:		// neg
-		temp = -ns[ nsp ];
-		if( CARRY_BIT( temp )) carry = 1;
-		else carry = 0;
-		ns[ nsp ] = WORD( temp );
+		ns[ nsp] = -ns[ nsp ];
 		break;
 	
 	case 6:		// and
@@ -112,7 +102,7 @@ void execute( nybble opcode )
 		break;
 		
 	case 7:		// not
-		ns[ nsp ] = WORD( ~ns[ nsp ] );
+		ns[ nsp ] = ~ns[ nsp ];
 		break;
 	
 	case 8:		// load

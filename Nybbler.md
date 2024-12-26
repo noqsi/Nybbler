@@ -13,34 +13,20 @@ Data encoding is modular two's complement binary. Addresses and literal data emb
 
 ## Memory model
 
-Data and instruction memory spaces are separate. Memory is addressed as words of the implementation's fixed size.
-
-### Registers
-
-Address | Name | Function
-------- | ---- | --------
--1	| sp | Stack pointer
--2 | cst | Call stack top
--3 | csp | Call stack pointer
--4 | carry | Carry bit
--5 | except	| Exception state/mask
--6 | iodat	| I/O data
--7 | iostat	| I/O device status
--8 | iosel | Select I/O device
-
+Memory is addressed as words of the implementation's fixed size. Minimal implementations share memory between instructions and data, although an enhanced implementation may separate them.
 
 ## Instruction Encoding
 
-Instructions are encoded as four bits (nybbles), packed into instruction word. When an instruction word is executed, all instructions in the word are executed in sequence. There is an exception to this rule: if the instruction word contains a **tsz** instruction, instructions following the **tsz** will be conditionally skipped.
+Instructions are encoded as four bits (nybbles), packed into instruction word. When an instruction word is executed, all instructions in the word are executed in sequence.
 
-*Long* instructions take the remaining nybbles of the instruction word as an operand. If the long instruction is in the last nybble of an instruction word, it takes the entire following word as its operand.
+*Long* instructions take the remaining nybbles of the instruction word as an operand. If the long instruction is in the last nybble of an instruction word, the word at the location the PC points to is taken as its operand. This is commonly the word following the instruction word. However, if the instruction word contains instruction(s) that modify the PC (**return** or **tsz**), that modified PC will supply the address of the operand.
  
 ## Opcodes
 Hex | ASM | LSE | S/L | Summary
 -------- | ----- | ---- | ------ | ----
 0 | nop	| {} | S | No operation
 1 | return | ] | S | Return from function
-2 | snz | (ifz) | S | Skip if nonzero
+2 | tsz | (if) | S | Test, skip if zero
 3 | half | 2/ | S | Divide TOS by two
 4 | add	| + | S | Add TOS to NOS
 5 | neg	| neg | S | Negate TOS
@@ -60,14 +46,14 @@ F | extend | extend | L | Undefined: for future extensions
 This does nothing. Its principal use is to fill out unused nybbles in instruction words.
 ### return ]
 Return from function. Pops the return address from the return stack into the PC.
-### if
+### tsz (if)
 If TOS is zero, skip the next instruction. TOS is dropped. 
 ### half 2/
 Shift the TOS right by one. The most significant bit is unchanged. This is thus a signed divide by 2. The least significant bit shifts into the **carry** register.
 ### add +
 Add TOS to NOS, dropping TOS. This also modifies the **carry** register.
 ### neg
-Negate the TOS (twos complement). Modifies the **carry** register (0 unless resulting TOS is 0).
+Negate the TOS (twos complement).
 ### and &
 Logical bitwise and of TOS with NOS. TOS is dropped, with the modified NOS becoming the TOS.
 ### not ~
@@ -90,11 +76,25 @@ Push long operand on stack.
 Reserved for future extensions.
 
 ## Flow Control
-Instructions **call**, **return**, and **jump**, control the processor's execution trajectory by modifying the PC. Only **tsz** can control flow within instruction words. Thus, if **return** appears within an instruction word (not at the end), subsequent instructions in that word will use the modified PC.
+Instructions **call**, **return**, **jump**, and **tsz** control the processor's execution trajectory by modifying the PC. There is no flow control within instruction words: if an instruction word is fetched for execution, every instruction in that word will be executed.
 
 ## Examples
 
 ```
-drop
-	if nop return
+drop		# functional version
+	tsz
+	return
+	return
+
+# Inline version of drop
+	tsz
+	nop
+
+# Three way conditional jump
+	dup literal 
+	0x8000	# assume 16 bit version
+	and tsz tsz jump
+	neg_target
+	pos_target
+	zero_target
 ```
