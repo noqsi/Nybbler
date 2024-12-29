@@ -49,8 +49,8 @@ reset_boot:
 clean:
 	rm example.blif example.asc example.bin
 
-nybbler12.blif: nybbler12.v
-	yosys -p 'synth_ice40 -blif nybbler12.blif' nybbler12.v
+nybbler12.blif: nybbler12.v pi_interface.v
+	yosys -p 'synth_ice40 -blif nybbler12.blif' nybbler12.v pi_interface.v
 
 nybbler12.asc: nybbler12.blif icoboard.pcf
 	arachne-pnr -d 8k -p icoboard.pcf -o nybbler12.asc nybbler12.blif
