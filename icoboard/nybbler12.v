@@ -6,7 +6,7 @@ module top (
 	output pmod3_1, pmod3_2, pmod3_3, pmod3_4, pmod3_7, pmod3_8, pmod3_9, pmod3_10,
 	output pmod4_1, pmod4_2, pmod4_3, pmod4_4, pmod4_7, pmod4_8, pmod4_9, pmod4_10,
 	input pi_clk, 
-	input pi_regsel,
+	input pi_select,
 	input pi_dir,
 	inout pi_d0, pi_d1, pi_d2, pi_d3, pi_d4, pi_d5, pi_d6, pi_d7
 );
@@ -48,54 +48,12 @@ module top (
 	end
 
 
-// Synchronize the Pi clock, making a pulse 1 cycle wide
-
-	reg [1:0] pi_sync;
-	wire pi_clk_sync;
-	
-	always @(negedge clk) pi_sync <= { pi_sync, pi_clk };
-	assign pi_clk_sync = pi_sync == 2'b01;
-	
-// Fiddle with LEDs to prove something is happening
-	
-	localparam COUNTER_BITS = 13;
-
-	reg [COUNTER_BITS-1:0] counter;
-	reg [COUNTER_BITS-1:0] counter_led1;
-	reg [COUNTER_BITS-1:0] counter_led2;
-	reg [COUNTER_BITS-1:0] counter_led3;
-
-	reg [COUNTER_BITS:0] state_led1;
-	reg [COUNTER_BITS:0] state_led2;
-	reg [COUNTER_BITS:0] state_led3;
-
-	always @(posedge clk) begin
-		if (!resetn) begin
-			counter <= 0;
-			state_led1 <= 0;
-			state_led2 <= 0;
-			state_led3 <= 0;
-		end else begin
-			counter <= counter + 1;
-			state_led1 <= state_led1 + !counter;
-			state_led2 <= state_led1 + ((2 << COUNTER_BITS) / 3);
-			state_led3 <= state_led1 + ((4 << COUNTER_BITS) / 3);
-		end
-
-		counter_led1 <= (state_led1[COUNTER_BITS] ? ((2 << COUNTER_BITS)-1) - state_led1 : state_led1);
-		counter_led2 <= (state_led2[COUNTER_BITS] ? ((2 << COUNTER_BITS)-1) - state_led2 : state_led2);
-		counter_led3 <= (state_led3[COUNTER_BITS] ? ((2 << COUNTER_BITS)-1) - state_led3 : state_led3);
-
-		led1 <= (counter > counter_led1 + (1 << (COUNTER_BITS-1)));
-		led2 <= (counter > counter_led2 + (1 << (COUNTER_BITS-1)));
-		led3 <= (counter > counter_led3 + (1 << (COUNTER_BITS-1))) && !state_led3[2:0];
-	end
 
 // Parallel port
 
 
-	wire [7:0] d_from_pi;
-	reg [7:0] d_to_pi;
+	wire [7:0] byte_from_pi;
+	reg [7:0] byte_to_pi;
 	
 	SB_IO #(
                 .PIN_TYPE(6'b 1010_01),
@@ -104,62 +62,64 @@ module top (
                 .PACKAGE_PIN({pi_d7, pi_d6, pi_d5, pi_d4,
 			 pi_d3, pi_d2, pi_d1, pi_d0}),
                 .OUTPUT_ENABLE(pi_dir),
-                .D_OUT_0(d_to_pi),
-                .D_IN_0(d_from_pi)
+                .D_OUT_0(byte_to_pi),
+                .D_IN_0(byte_from_pi)
         );
 	
-// Registers
+// Interface between the byte-oriented Pi world and the word-oriented
+// nybbler world.
 
-// The "register register" selects which register is to be written/read
-// by the host.
+	wire [15:0] unified_addr;
+	wire [11:0] pi_to_nybbler;
+	wire [11:0] nybbler_to_pi;
+	wire [15:0] nybbler_status;
+	wire read, write, start, halt;
 
-	reg [3:0] rr;
+	pi_interface pif (
+		.pi_bus_clk( pi_clk ),
+		.pi_select( pi_select ),
+		.pi_dir( pi_dir ),
+		.byte_from_pi( byte_from_pi ),
+		.byte_to_pi( byte_to_pi ),
+		.address( unified_addr ),
+		.word_from_pi( pi_to_nybbler ),
+		.read( read ),
+		.write( write ),
+		.start( start ),
+		.halt( halt ),
+		.word_to_pi( nybbler_to_pi ),
+		.status_to_pi( nybbler_status )
+	);
+
+// Stub for nybbler core
+
+	assign nybbler_to_pi = 1951;
+	assign nybbler_status = 7;
+
+// Monitor LED assignments
+
+	assign {back_left_leds, back_right_leds} = unified_addr;
+	assign {front_left_leds, front_right_leds } = 
+	{ nybbler_status, pi_to_nybbler };	
 	
-// Address and data registers for host peek/poke
 
-	reg [11:0] ar, dr;
+// PMOD LEDs
+// Assume PMOD 1 is front left. Bits arranged so MSB is left
+
+wire [7:0] front_left_leds, front_right_leds, back_left_leds, back_right_leds;
+
+	assign {pmod1_10, pmod1_9, pmod1_8, pmod1_7,
+	 	pmod1_4, pmod1_3, pmod1_2, pmod1_1} = front_left_leds;
 	
-	always @(posedge clk) begin
-		if( pi_dir )		// output to Pi
-			if( !pi_regsel ) d_to_pi <= rr;
-			else case ( rr )
-				
-				0 : d_to_pi <= ar[7:0];
-					
-				1 : d_to_pi <= ar[11:8];
-					
-				2 : d_to_pi <= dr[7:0];
-					
-				3 : d_to_pi <= dr[11:8];
-					
-			endcase
-		else if( pi_clk_sync )
-			if( !pi_regsel ) rr <= d_from_pi;
-			else case ( rr )
-			
-				0 : ar[7:0] <= d_from_pi;
+	assign {pmod2_10, pmod2_9, pmod2_8, pmod2_7,
+		pmod2_4, pmod2_3, pmod2_2, pmod2_1 } = front_right_leds;
 		
-				1 : ar[11:8] <= d_from_pi;
-			
-				2 : dr[7:0] <= d_from_pi;
-			
-				3 : dr[11:8] <= d_from_pi;
-				
-			endcase
-	end
-	
-
-// Monitor LEDs
-
-	assign {pmod1_10, pmod1_9, pmod1_8, pmod1_7} = rr;
-	
-	assign {pmod1_4, pmod1_3, pmod1_2, pmod1_1,
-		pmod2_10, pmod2_9, pmod2_8, pmod2_7,
-		pmod2_4, pmod2_3, pmod2_2, pmod2_1 } = ar;
+	assign {pmod3_1, pmod3_2, pmod3_3, pmod3_4,
+		pmod3_7, pmod3_8, pmod3_9, pmod3_10 } = back_right_leds;
 		
-	assign {pmod4_7, pmod4_8, pmod4_9, pmod4_10,
-		pmod3_1, pmod3_2, pmod3_3, pmod3_4,
-		pmod3_7, pmod3_8, pmod3_9, pmod3_10 } = dr;
+	assign {pmod3_4, pmod4_2, pmod4_3, pmod4_4,
+		pmod4_7, pmod4_8, pmod4_9, pmod4_10 } = back_left_leds;
+	
 		
 	
 endmodule
