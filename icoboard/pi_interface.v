@@ -79,7 +79,10 @@ module pi_interface (
 // Data register management
 
 	always @ ( posedge clk )
-		if( read ) dr <= word_to_pi;	// priority
+		if( read ) begin
+			dr <= word_to_pi[7:0];	// priority
+			drx <= word_to_pi[11:8];
+		end
 		else if( dr2drx ) drx <= dr;
 		else if( pi_dir & pi_clk_sync & !pi_select ) dr <= byte_from_pi;
 			
