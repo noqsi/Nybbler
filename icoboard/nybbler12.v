@@ -61,7 +61,7 @@ module top (
         ) raspi_io [7:0] (
                 .PACKAGE_PIN({pi_d7, pi_d6, pi_d5, pi_d4,
 			 pi_d3, pi_d2, pi_d1, pi_d0}),
-                .OUTPUT_ENABLE(pi_dir),
+                .OUTPUT_ENABLE(!pi_dir),
                 .D_OUT_0(byte_to_pi),
                 .D_IN_0(byte_from_pi)
         );
@@ -76,6 +76,7 @@ module top (
 	wire read, write, start, halt;
 
 	pi_interface pif (
+		.clk( clk ),
 		.pi_bus_clk( pi_clk ),
 		.pi_select( pi_select ),
 		.pi_dir( pi_dir ),
@@ -88,19 +89,19 @@ module top (
 		.start( start ),
 		.halt( halt ),
 		.word_to_pi( nybbler_to_pi ),
-		.status_to_pi( nybbler_status )
+		.status_to_pi( nybbler_status ),
+		.debug( front_left_leds )
 	);
 
 // Stub for nybbler core
 
 	assign nybbler_to_pi = 1951;
-	assign nybbler_status = 7;
+	assign nybbler_status = 42;
 
 // Monitor LED assignments
 
 	assign {back_left_leds, back_right_leds} = unified_addr;
-	assign {front_left_leds, front_right_leds } = 
-	{ nybbler_status, pi_to_nybbler };	
+	assign front_right_leds = nybbler_status;
 	
 
 // PMOD LEDs
@@ -117,7 +118,7 @@ wire [7:0] front_left_leds, front_right_leds, back_left_leds, back_right_leds;
 	assign {pmod3_1, pmod3_2, pmod3_3, pmod3_4,
 		pmod3_7, pmod3_8, pmod3_9, pmod3_10 } = back_right_leds;
 		
-	assign {pmod3_4, pmod4_2, pmod4_3, pmod4_4,
+	assign {pmod4_1, pmod4_2, pmod4_3, pmod4_4,
 		pmod4_7, pmod4_8, pmod4_9, pmod4_10 } = back_left_leds;
 	
 		

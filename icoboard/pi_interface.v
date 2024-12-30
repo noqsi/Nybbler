@@ -1,4 +1,4 @@
-module pi_interface (
+module pi_interface ( 
 	input clk,
 
 // Raspberry Pi GPIO interface
@@ -16,7 +16,9 @@ module pi_interface (
 	output read, write, start, halt,
 	
 	input [11:0] word_to_pi,
-	input [15:0] status_to_pi
+	input [15:0] status_to_pi,
+	
+	output [7:0] debug
 );
 
 // Four registers capture the interface state
@@ -36,6 +38,15 @@ module pi_interface (
         
         always @(negedge clk) pi_sync <= { pi_sync, pi_bus_clk };
         assign pi_clk_sync = pi_sync == 2'b01;
+	
+// Debug
+
+	reg [7:0] debug_reg;
+	
+	always @( posedge clk ) 
+		if( cmd ) debug_reg <= debug_reg + 1;
+	
+	assign debug = dr;
 
 // Command decoding
 
@@ -75,7 +86,10 @@ module pi_interface (
 // Address register management
 		
 	always @ ( posedge clk )			
-		if( incar ) ar[11:0] <= ar[11:0] + 1; // priority
+		if( incar ) begin	// priority
+			if( ar == 8'hff ) arx[3:0] <= arx[3:0] + 1; // carry
+			ar <= ar + 1;
+		end
 		else begin
 			if( dr2ar ) ar <= dr;
 			if( dr2arx ) arx <= dr;
