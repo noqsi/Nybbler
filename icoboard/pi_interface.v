@@ -72,7 +72,7 @@ module pi_interface (
 	always @ ( word_to_pi or status_to_pi or pi_select or pi_clk )
 		if( pi_bus_clk )
 			if( pi_select ) byte_to_pi = {4'b0000,drx};
-			else byte_to_pi = ar;
+			else byte_to_pi = dr;
 		else if( pi_select ) byte_to_pi = status_to_pi[15:8];
 			else byte_to_pi = status_to_pi[7:0];
 
