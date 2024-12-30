@@ -1,25 +1,43 @@
 " ico" loadmod
 
-0 AR0 :constant
-1 AR1 :constant
-2 DR0 :constant
-3 DR1 :constant
+# Command bits
 
-# r reg-get yields n
-reg-get : 0 ico-put 1 ico-get
+1 DR>DRX :constant
+2 DR->AR :constant
+4 DR->ARX :constant
+8 INCAR :constant
+16 READ :constant
+32 WRITE :constant
+64 START :constant
+128 HALT :constant
 
-# n r reg-put yields nothing
-reg-put : 0 ico-put 1 ico-put
+# >CMD yields nothing
+>CMD : 1 ico-put
 
-# ar-get yields n
-ar-get :  AR0 reg-get AR1 reg-get 256 * +
+# Read/write "unified" registers
 
-# n ar-put yields nothing
-ar-put : dup AR0 reg-put 256 / AR1 reg-put
+# 16 bit core status
+# <STATUS yields n
+<STATUS : 1 ico-poll 256 * 0 ico-poll +
 
-# dr-get yields n
-dr-get :  DR0 reg-get DR1 reg-get 256 * +
+# 12 bit data
+# <UDR yields n
+<UDR : 1 ico-get 256 * 0 ico-get +
 
-# n dr-put yields nothing
-dr-put : dup DR0 reg-put 256 / DR1 reg-put
+# n >UDR yields nothing
+>UDR : dup 256 / 0 ico-put DR->DRX >CMD 0 ico-put
 
+# 16 bit address
+# n >UAR yields nothing
+>UAR : dup 256 / 0 ico-put DR->ARX >CMD 0 ico-put DR-AR >CMD
+
+# Read/write memory from UAR address
+
+# <MEM yields n
+<MEM : READ >CMD <UDR
+# also increment UAR
+<MEM++ : READ INCAR | >CMD <UDR
+
+# n >MEM yields nothing
+>MEM : >UDR WRITE >CMD
+>MEM++ : >UDR WRITE INCAR | >CMD
