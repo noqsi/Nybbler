@@ -21,6 +21,10 @@ module core (
 		
 		2 : host_word_out = code_out;
 		
+		3 : host_word_out = number_out;
+		
+		4 : host_word_out = return_out;
+		
 		default : host_word_out = 'hBAD;
 		endcase
 		
@@ -49,6 +53,36 @@ module core (
 		.rdata( code_out ),
 		.clock( clk ),
 		.write( code_write )
+	);
+
+	wire [11:0] number_in = host_word_in;	// Future mux
+	wire [11:0] number_out;
+	wire number_write = host_write & mem_seg == 3;	// Future mux
+	wire [7:0] number_addr = mem_addr;	// Future mux
+
+	RAM #(
+		.ABITS( 8 )
+	) number (
+		.addr( number_addr ),
+		.wdata( number_in ),
+		.rdata( number_out ),
+		.clock( clk ),
+		.write( number_write )
+	);
+
+	wire [11:0] return_in = host_word_in;	// Future mux
+	wire [11:0] return_out;
+	wire return_write = host_write & mem_seg == 4;	// Future mux
+	wire [7:0] return_addr = mem_addr;	// Future mux
+
+	RAM #(
+		.ABITS( 8 )
+	) return (
+		.addr( return_addr ),
+		.wdata( return_in ),
+		.rdata( return_out ),
+		.clock( clk ),
+		.write( return_write )
 	);
 
 	assign status = 1983;
