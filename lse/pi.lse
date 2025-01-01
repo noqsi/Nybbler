@@ -48,5 +48,9 @@ dump1 : <MEM++ ,3h sp
 
 dump16 : 16 dump1 iterate nl
 
-dump2048 : 256 dump16 iterate
+dump4096 : 256 dump16 iterate
+
+(fill4096) : 4096 count - >MEM++
+
+fill4096 : 4096 (fill4096) iterate
 

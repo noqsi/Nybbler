@@ -96,12 +96,12 @@ module top (
 // Nybbler core
 
 	core c1 (
-		.addr_in( unified_addr ),
-		.data_in( pi_to_nybbler ),
-		.data_out( nybbler_to_pi ),
+		.host_addr_in( unified_addr ),
+		.host_word_in( pi_to_nybbler ),
+		.host_word_out( nybbler_to_pi ),
 		.clk( clk ),
-		.read( read ),
-		.write( write ),
+		.host_read( read ),
+		.host_write( write ),
 		.start( start ),
 		.halt( halt ),
 		.status( nybbler_status )
