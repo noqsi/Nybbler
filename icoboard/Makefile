@@ -50,8 +50,9 @@ clean:
 	rm -f example.blif example.asc example.bin \
 		nybbler12.blif nybbler12.asc nybbler12.bin 
 
-nybbler12.blif: nybbler12.v pi_interface.v
-	yosys -p 'synth_ice40 -top top -blif nybbler12.blif' nybbler12.v pi_interface.v
+nybbler12.blif: nybbler12.v pi_interface.v RAM.v core.v
+	yosys -p 'synth_ice40 -top top -blif nybbler12.blif' nybbler12.v \
+		pi_interface.v RAM.v core.v
 
 nybbler12.asc: nybbler12.blif icoboard.pcf
 	arachne-pnr -d 8k -p icoboard.pcf -o nybbler12.asc nybbler12.blif

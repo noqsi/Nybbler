@@ -93,10 +93,20 @@ module top (
 		.debug( front_left_leds )
 	);
 
-// Stub for nybbler core
+// Nybbler core
 
-	assign nybbler_to_pi = 1951;
-	assign nybbler_status = 42;
+	core c1 (
+		.addr_in( unified_addr ),
+		.data_in( pi_to_nybbler ),
+		.data_out( nybbler_to_pi ),
+		.clk( clk ),
+		.read( read ),
+		.write( write ),
+		.start( start ),
+		.halt( halt ),
+		.status( nybbler_status )
+	);
+
 
 // Monitor LED assignments
 

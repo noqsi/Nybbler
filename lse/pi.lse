@@ -2,7 +2,7 @@
 
 # Command bits
 
-1 DR>DRX :constant
+1 DR->DRX :constant
 2 DR->AR :constant
 4 DR->ARX :constant
 8 INCAR :constant
@@ -29,7 +29,7 @@
 
 # 16 bit address
 # n >UAR yields nothing
->UAR : dup 256 / 0 ico-put DR->ARX >CMD 0 ico-put DR-AR >CMD
+>UAR : dup 256 / 0 ico-put DR->ARX >CMD 0 ico-put DR->AR >CMD
 
 # Read/write memory from UAR address
 
@@ -41,3 +41,12 @@
 # n >MEM yields nothing
 >MEM : >UDR WRITE >CMD
 >MEM++ : >UDR WRITE INCAR | >CMD
+
+,3h : \ fff & dup \ 100 / ,h dup \ ff & \ 10 / ,h \ f & ,h
+
+dump1 : <MEM++ ,3h sp 
+
+dump16 : 16 dump1 iterate nl
+
+dump2048 : 256 dump16 iterate
+
