@@ -36,7 +36,7 @@ module pi_interface (
         reg [1:0] pi_sync;
         wire pi_clk_sync;
         
-        always @(negedge clk) pi_sync <= { pi_sync, pi_bus_clk };
+        always @(negedge clk) pi_sync <= { pi_sync[0], pi_bus_clk };
         assign pi_clk_sync = pi_sync == 2'b01;
 	
 // Debug
@@ -56,10 +56,10 @@ module pi_interface (
 	wire dr2ar = cmd & byte_from_pi[1];
 	wire dr2arx = cmd & byte_from_pi[2];
 	wire incar = cmd & byte_from_pi[3];
-	wire read = cmd & byte_from_pi[4];
-	wire write = cmd & byte_from_pi[5];
-	wire start = cmd & byte_from_pi[6];
-	wire halt = cmd & byte_from_pi[7];
+	assign read = cmd & byte_from_pi[4];
+	assign write = cmd & byte_from_pi[5];
+	assign start = cmd & byte_from_pi[6];
+	assign halt = cmd & byte_from_pi[7];
 
 // Outputs to nybbler core
 
@@ -69,7 +69,7 @@ module pi_interface (
 
 // Data to Pi
 
-	always @ ( word_to_pi or status_to_pi or pi_select or pi_clk )
+	always @ ( word_to_pi or status_to_pi or pi_select or pi_bus_clk )
 		if( pi_bus_clk )
 			if( pi_select ) byte_to_pi = {4'b0000,drx};
 			else byte_to_pi = dr;
@@ -83,7 +83,7 @@ module pi_interface (
 			dr <= word_to_pi[7:0];	// priority
 			drx <= word_to_pi[11:8];
 		end
-		else if( dr2drx ) drx <= dr;
+		else if( dr2drx ) drx <= dr[3:0];
 		else if( pi_dir & pi_clk_sync & !pi_select ) dr <= byte_from_pi;
 			
 // Address register management

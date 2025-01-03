@@ -64,5 +64,8 @@ nybbler12.bin: nybbler12.asc
 nybbler: nybbler12.bin
 	$(SSH_RASPI) 'icoprog -p' < nybbler12.bin
 
-.PHONY: prog_sram prog_flash reset_halt reset_boot clean
+lint:
+	verilator --lint-only nybbler12.v pi_interface.v RAM.v core.v
+
+.PHONY: prog_sram prog_flash reset_halt reset_boot clean lint
 

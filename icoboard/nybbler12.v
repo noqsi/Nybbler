@@ -44,7 +44,7 @@ module top (
 
 	always @(posedge clk) begin
 		resetn <= &resetn_gen;
-		resetn_gen <= {resetn_gen, pll_locked};
+		resetn_gen <= {resetn_gen[2:0], pll_locked};
 	end
 
 
@@ -111,7 +111,7 @@ module top (
 // Monitor LED assignments
 
 	assign {back_left_leds, back_right_leds} = unified_addr;
-	assign front_right_leds = nybbler_status;
+	assign front_right_leds = nybbler_status[7:0];
 	
 
 // PMOD LEDs
