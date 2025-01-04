@@ -50,5 +50,4 @@ BIT | Command
 
 The increment address command increments the 12 bit address part of the UAR. It does not change the segment field.
 
-Multiple commands may be combined, except that increment address prevents any other change to AR or ARX. The increment occurs after any memory read or write. In the current implementation, if you read and write memory in one command, the result of the read is unpredictable.
-
+Multiple commands may be combined, except that increment address prevents any other change to AR or ARX. The increment occurs after any memory read or write. If you read and write memory in one command, you swap DR with the addressed memory cell. If you start and halt the processor in one command, the processor will execute a single instruction word (which could be as many as three instructions).
