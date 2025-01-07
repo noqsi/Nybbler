@@ -30,11 +30,35 @@ module core (
 		
 		default : host_word_out = 'hBAD;
 		endcase
+
+	wire [3:0] instruction = 0;	// stub
+	
+	wire i_nop = instruction == 0;
+	wire i_half = instruction == 1;
+	wire i_neg = instruction == 2;
+	wire i_not = instruction == 3;
+	wire i_return = instruction == 4;
+	wire i_tsz = instruction == 5;
+	wire i_add = instruction == 6;
+	wire i_and = instruction == 7;
+	wire i_fetch = instruction == 8;
+	wire i_store = instruction == 9;
+	wire i_swap = instruction == 10;
+	wire i_dup = instruction == 11;
+	wire i_call = instruction == 12;
+	wire i_jump = instruction == 13;
+	wire i_literal = instruction == 14;
+	wire i_extend = instruction == 15;
+	
+// The multiplexing here implements data flows for
+// the fetch and store instructions.
 		
-	wire [11:0] data_in = host_word_in;	// Future mux
+	wire [11:0] data_in = running ? number_out : host_word_in;	
 	wire [11:0] data_out;
-	wire data_write = host_write && (mem_seg == 1);	// Future mux
-	wire [11:0] data_addr = mem_addr;	// Future mux
+	wire data_write = 
+		running ? ( execute && i_store )
+		: ( host_write && (mem_seg == 1));
+	wire [11:0] data_addr = running ? TOS : mem_addr;
 	
 
 	RAM data (
@@ -45,10 +69,12 @@ module core (
 		.write( data_write )
 	);
 
-	wire [11:0] code_in = host_word_in;	// Future mux
+// Only the host can write code, so these flows are simple
+
+	wire [11:0] code_in = host_word_in;
 	wire [11:0] code_out;
-	wire code_write = host_write && (mem_seg == 2);	// Future mux
-	wire [11:0] code_addr = mem_addr;	// Future mux
+	wire code_write = host_write && (mem_seg == 2);
+	wire [11:0] code_addr = running ? PC : mem_addr;
 
 	RAM code (
 		.addr( code_addr ),
@@ -57,11 +83,14 @@ module core (
 		.clock( clk ),
 		.write( code_write )
 	);
+	
+// Number stack data comes from TOS, address from SP
 
-	wire [11:0] number_in = host_word_in;	// Future mux
+	wire [11:0] number_in = running ? TOS : host_word_in;
 	wire [11:0] number_out;
-        wire number_write = host_write && (mem_seg == 3);	// Future mux
-	wire [7:0] number_addr = mem_addr[7:0];	// Future mux
+        wire number_write = running ? ( i_swap || i_literal )
+		: ( host_write && (mem_seg == 3));
+	wire [7:0] number_addr = running ? SP : mem_addr[7:0];
 
 	RAM #(
 		.ABITS( 8 )
@@ -73,10 +102,12 @@ module core (
 		.write( number_write )
 	);
 
-	wire [11:0] return_in = host_word_in;	// Future mux
+// Return stack data comes from PC, address from RSP
+
+	wire [11:0] return_in = running ? PC : host_word_in;
 	wire [11:0] return_out;
-	wire return_write = host_write && (mem_seg == 4);	// Future mux
-	wire [7:0] return_addr = mem_addr[7:0];	// Future mux
+	wire return_write = running ? i_call : ( host_write && (mem_seg == 4));
+	wire [7:0] return_addr = running ? RSP : mem_addr[7:0];
 
 	RAM #(
 		.ABITS( 8 )
@@ -110,11 +141,11 @@ module core (
 		
 		0 : registers_out = PC;
 		
-		1 : registers_out = RSP;
+		1 : registers_out = { 4'h0, RSP };
 		
 		2 : registers_out = TOS;
 		
-		3 : registers_out = SP;
+		3 : registers_out = { 4'h0, SP };
 		
 		default : registers_out = 'hbad;
 		endcase
@@ -131,13 +162,13 @@ module core (
 		end
 		// else do processor stuff
 	
-	reg [11:0] RSP;
+	reg [7:0] RSP;
 	
 	wire rsp_write = reg_write && (mem_addr == 1);
 	
 	always @( posedge( clk ))
 		if( !running ) begin
-			if( rsp_write ) RSP <= host_word_in;
+			if( rsp_write ) RSP <= host_word_in[7:0];
 		end
 		// else do processor stuff
 	
@@ -151,16 +182,25 @@ module core (
 		end
 		// else do processor stuff
 
-	reg [11:0] SP;
+	reg [7:0] SP;
 	
 	wire sp_write = reg_write && (mem_addr == 3);
 	
 	always @( posedge( clk ))
 		if( !running ) begin
-			if( sp_write ) SP <= host_word_in;
+			if( sp_write ) SP <= host_word_in[7:0];
 		end
 		// else do processor stuff
 	
+// For now, alternate execute and memory cycles
+
+	reg execute;
+	
+	always @( posedge( clk ))
+		if( !running )
+			execute <= 0;
+		else
+			execute <= !execute;
 
 	assign status = {15'b0, running};
 	
