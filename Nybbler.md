@@ -37,9 +37,9 @@ Hex | ASM | LSE | S/L | Summary
 A | swap | swap | S | Swap NOS with TOS
 B | dup | dup | S | Duplicate TOS
 C | call | call | L | Call function
-D | jump | jump | L | Relative jump to code
-E | literal | literal | L | Put literal value on stack
-F | extend | extend | L | Undefined: for future extensions
+D | extend | extend | L | Undefined: for future extensions
+E | jump | jump | L | Relative jump to code
+F | literal | literal | L | Put literal value on stack
 
 ## Operation details
 ### nop {}
@@ -69,9 +69,9 @@ Duplicate TOS, push duplicate on stack.
 ### call
 Push PC on return stack, set PC to long operand.
 ### jump
-Add long operand to PC.
+Add long operand to PC. If the operand is part of the instruction word, it is sign-extended to allow backward jumps from compact instructions.
 ### literal
-Push long operand on stack.
+Push long operand on stack. If the operand is part of the instruction word, it is sign-extended to allow negative literals in compact instructions.
 ### extend
 Reserved for future extensions.
 
