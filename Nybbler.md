@@ -25,13 +25,13 @@ Instructions are encoded as four bits (nybbles), packed into instruction word. W
 Hex | ASM | LSE | S/L | Summary
 -------- | ----- | ---- | ------ | ----
 0 | nop	| {} | S | No operation
-1 | return | ] | S | Return from function
-2 | tsz | (if) | S | Test, skip if zero
-3 | half | 2/ | S | Divide TOS by two
-4 | add	| + | S | Add TOS to NOS
-5 | neg	| neg | S | Negate TOS
-6 | and	| & | S | Bitwise and
-7 | not	| ~ | S | Bitwise not
+1 | half | 2/ | S | Divide TOS by two
+2 | neg	| neg | S | Negate TOS
+3 | not	| ~ | S | Bitwise not
+4 | return | ] | S | Return from function
+5 | tsz | (if) | S | Test, skip if zero
+6 | add	| + | S | Add TOS to NOS
+7 | and	| & | S | Bitwise and
 8 | fetch | @ | S | Replace TOS with its target in memory
 9 | store | ! | S | NOS to TOS target, drop both
 A | swap | swap | S | Swap NOS with TOS
