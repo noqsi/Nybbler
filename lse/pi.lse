@@ -1,5 +1,20 @@
 " ico" loadmod
 
+# Base addrs for segments
+
+\ 1000 DATA :constant
+\ 2000 CODE :constant
+\ 3000 NUMBER :constant
+\ 4000 RETURN :constant
+\ 5000 REGS :constant
+
+# Register addresses
+
+REGS 0 + PC :constant
+REGS 1 + RSP :constant
+REGS 2 + TOS :constant
+REGS 3 + SP :constant
+
 # Command bits
 
 1 DR->DRX :constant
@@ -41,6 +56,32 @@
 # n >MEM yields nothing
 >MEM : >UDR WRITE >CMD
 >MEM++ : >UDR WRITE INCAR | >CMD
+
+# <PC yields n
+<PC : PC >UAR <MEM
+
+# n >PC yields nothing
+>PC : PC >UAR >MEM
+
+# <RSP yields n
+<RSP : RSP >UAR <MEM
+
+# n >RSP yields nothing
+>RSP : RSP >UAR >MEM
+
+# <TOS yields n
+<TOS : TOS >UAR <MEM
+
+# n >TOS yields nothing
+>TOS : TOS >UAR >MEM
+
+# <SP yields n
+<SP : SP >UAR <MEM
+
+# n >SP yields nothing
+>SP : SP >UAR >MEM
+
+
 
 ,3h : \ fff & dup \ 100 / ,h dup \ ff & \ 10 / ,h \ f & ,h
 

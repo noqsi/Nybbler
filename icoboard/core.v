@@ -30,25 +30,73 @@ module core (
 		
 		default : host_word_out = 'hBAD;
 		endcase
-
-	wire [3:0] instruction = 0;	// stub
 	
-	wire i_nop = instruction == 0;
-	wire i_half = instruction == 1;
-	wire i_neg = instruction == 2;
-	wire i_not = instruction == 3;
-	wire i_return = instruction == 4;
-	wire i_tsz = instruction == 5;
-	wire i_add = instruction == 6;
-	wire i_and = instruction == 7;
-	wire i_fetch = instruction == 8;
-	wire i_store = instruction == 9;
-	wire i_swap = instruction == 10;
-	wire i_dup = instruction == 11;
-	wire i_call = instruction == 12;
-	wire i_jump = instruction == 13;
-	wire i_literal = instruction == 14;
-	wire i_extend = instruction == 15;
+	reg [11:0] instruction_word;
+	
+	always @( posedge( clk ))
+		if( cycle == 0 ) instruction_word <= code_out;
+
+	reg [3:0] instruction;
+	
+	always @(cycle or instruction_word )
+		case( cycle )
+		
+		2: instruction = instruction_word[11:8];
+		
+		4: instruction = instruction_word[7:4];
+		
+		6: instruction = instruction_word[3:0];
+		
+		default : instruction = 0;
+		
+		endcase
+	
+	wire i_nop = execute && ( instruction == 0 );
+	wire i_half = execute && ( instruction == 1 );
+	wire i_neg = execute && ( instruction == 2 );
+	wire i_not = execute && ( instruction == 3 );
+	wire i_return = execute && ( instruction == 4 );
+	wire i_tsz = execute && ( instruction == 5 );
+	wire i_add = execute && ( instruction == 6 );
+	wire i_and = execute && ( instruction == 7 );
+	wire i_fetch = execute && ( instruction == 8 );
+	wire i_store = execute && ( instruction == 9 );
+	wire i_swap = execute && ( instruction == 10 );
+	wire i_dup = execute && ( instruction == 11 );
+	wire i_call = execute && ( instruction == 12 );
+	wire i_extend = execute && ( instruction == 13 );
+	wire i_jump = execute && ( instruction == 14 );
+	wire i_literal = execute && ( instruction == 15 );
+	
+	reg [11:0] signed_arg, unsigned_arg;
+	
+	always @( cycle or instruction_word or code_out )
+		case( cycle[2:1] )
+		
+		1: begin
+			signed_arg = 
+			{ {4{ instruction_word[7] }}, instruction_word[ 7:0] };
+			unsigned_arg = { 4'h0, instruction_word[ 7:0] };
+		end
+		
+		2: begin
+			signed_arg = 
+			{ {8{ instruction_word[3] }}, instruction_word[ 3:0] };
+			unsigned_arg = { 8'h00, instruction_word[ 3:0] };
+		end
+		
+		3: begin
+			signed_arg = code_out;
+			unsigned_arg = code_out;
+		end
+		
+		default: begin
+			signed_arg = 0;
+			unsigned_arg = 0;
+		end
+		endcase
+
+		
 	
 // The multiplexing here implements data flows for
 // the fetch and store instructions.
@@ -56,8 +104,7 @@ module core (
 	wire [11:0] data_in = running ? number_out : host_word_in;	
 	wire [11:0] data_out;
 	wire data_write = 
-		running ? ( execute && i_store )
-		: ( host_write && (mem_seg == 1));
+		running ? i_store : ( host_write && (mem_seg == 1));
 	wire [11:0] data_addr = running ? TOS : mem_addr;
 	
 
@@ -160,7 +207,13 @@ module core (
 		if( !running ) begin
 			if( pc_write ) PC <= host_word_in;
 		end
-		// else do processor stuff
+		else begin
+			if( i_return ) PC <= return_out;
+			if( i_tsz && TOS == 0 ) PC <= PC + 1;
+			if( i_call ) PC <= unsigned_arg;
+			if( i_jump ) PC <= PC + signed_arg;
+			if( cycle == 1 ) PC <= PC + 1;
+		end
 	
 	reg [7:0] RSP;
 	
@@ -192,15 +245,21 @@ module core (
 		end
 		// else do processor stuff
 	
-// For now, alternate execute and memory cycles
+// Intruction cycle
 
-	reg execute;
+	reg [2:0] cycle;
 	
 	always @( posedge( clk ))
-		if( !running )
-			execute <= 0;
+		if( 
+			!running 
+			|| cycle == 6 
+			|| execute && instruction[3:2] == 2'b00
+			) 
+			cycle <= 0;
 		else
-			execute <= !execute;
+			cycle = cycle + 1 ;
+
+	wire execute = ( cycle == 2 ) || ( cycle == 4 ) || ( cycle == 6 );
 
 	assign status = {15'b0, running};
 	
