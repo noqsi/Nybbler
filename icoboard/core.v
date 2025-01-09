@@ -34,7 +34,7 @@ module core (
 	reg [11:0] instruction_word;
 	
 	always @( posedge( clk ))
-		if( cycle == 0 ) instruction_word <= code_out;
+		if( cycle == 1 ) instruction_word <= code_out;
 
 	reg [3:0] instruction;
 	
@@ -172,7 +172,7 @@ module core (
 	
 	always @( posedge( clk ))
 		if( start ) running <= 1;
-		else if( halt_request ) running <= 0;
+		else if( halt_request && last_cycle ) running <= 0;
 	
 	always @( posedge( clk ))
 		if( halt ) halt_request <= 1;	  
@@ -212,7 +212,7 @@ module core (
 			if( i_tsz && TOS == 0 ) PC <= PC + 1;
 			if( i_call ) PC <= unsigned_arg;
 			if( i_jump ) PC <= PC + signed_arg;
-			if( cycle == 1 ) PC <= PC + 1;
+			if( cycle == 0 ) PC <= PC + 1;
 		end
 	
 	reg [7:0] RSP;
@@ -249,18 +249,16 @@ module core (
 
 	reg [2:0] cycle;
 	
+	wire last_cycle = cycle == 6 || execute && instruction[3:2] == 2'b11;
+	
 	always @( posedge( clk ))
-		if( 
-			!running 
-			|| cycle == 6 
-			|| execute && instruction[3:2] == 2'b00
-			) 
+		if( !running || last_cycle ) 
 			cycle <= 0;
 		else
 			cycle = cycle + 1 ;
 
 	wire execute = ( cycle == 2 ) || ( cycle == 4 ) || ( cycle == 6 );
 
-	assign status = {15'b0, running};
+	assign status = {8'b0, cycle == 0, cycle == 1, cycle == 2, cycle == 3, cycle == 4, cycle == 5, cycle == 6, running};
 	
 endmodule
