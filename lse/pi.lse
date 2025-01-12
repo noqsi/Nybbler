@@ -95,3 +95,22 @@ dump4096 : 256 dump16 iterate
 
 fill4096 : 4096 (fill4096) iterate
 
+PC> : " PC:  " ,t <PC ,3h
+RSP> : " RSP: " ,t <RSP ,3h
+TOS> : " TOS: " ,t <TOS ,3h
+SP> : " SP:  " ,t <SP ,3h
+NOS> : " NOS: " ,t NUMBER <SP + >UAR <MEM ,3h
+
+tab : " 	" ,t
+
+regs : PC> tab RSP> tab SP> tab TOS> tab NOS>
+
+
+next : " Next: " ,t CODE <PC + >UAR <MEM ,3h
+
+step : START HALT | >CMD
+
+s : step regs nl next nl
+
+
+

@@ -34,58 +34,62 @@ module core (
 	reg [11:0] instruction_word;
 	
 	always @( posedge( clk ))
-		if( cycle == 1 ) instruction_word <= code_out;
+		if( cycle == 0 ) instruction_word <= code_out;
 
 	reg [3:0] instruction;
 	
 	always @(cycle or instruction_word )
 		case( cycle )
 		
-		2: instruction = instruction_word[11:8];
+		1: instruction = instruction_word[11:8];
 		
-		4: instruction = instruction_word[7:4];
+		3: instruction = instruction_word[7:4];
 		
-		6: instruction = instruction_word[3:0];
+		5: instruction = instruction_word[3:0];
+		
+		6: instruction = instruction_word[3:0];  // for literal and call
 		
 		default : instruction = 0;
 		
 		endcase
 	
-	wire i_nop = execute && ( instruction == 0 );
-	wire i_half = execute && ( instruction == 1 );
-	wire i_neg = execute && ( instruction == 2 );
-	wire i_not = execute && ( instruction == 3 );
-	wire i_return = execute && ( instruction == 4 );
-	wire i_tsz = execute && ( instruction == 5 );
-	wire i_add = execute && ( instruction == 6 );
-	wire i_and = execute && ( instruction == 7 );
-	wire i_fetch = execute && ( instruction == 8 );
-	wire i_store = execute && ( instruction == 9 );
-	wire i_swap = execute && ( instruction == 10 );
-	wire i_dup = execute && ( instruction == 11 );
-	wire i_call = execute && ( instruction == 12 );
-	wire i_extend = execute && ( instruction == 13 );
-	wire i_jump = execute && ( instruction == 14 );
-	wire i_literal = execute && ( instruction == 15 );
+	parameter i_nop = 0 ;
+	parameter i_half = 1 ;
+	parameter i_neg = 2 ;
+	parameter i_not = 3 ;
+	parameter i_return = 4 ;
+	parameter i_tsz = 5 ;
+	parameter i_add = 6 ;
+	parameter i_and = 7 ;
+	parameter i_fetch = 8 ;
+	parameter i_store = 9 ;
+	parameter i_swap = 10 ;
+	parameter i_drop = 11 ;
+	parameter i_extend = 12 ;
+	parameter i_call = 13 ;
+	parameter i_jump = 14 ;
+	parameter i_literal = 15 ;
+	
+	wire long_inst = instruction[3:2] == 2'b11; // long instruction
 	
 	reg [11:0] signed_arg, unsigned_arg;
 	
 	always @( cycle or instruction_word or code_out )
 		case( cycle[2:1] )
 		
-		1: begin
+		0: begin
 			signed_arg = 
 			{ {4{ instruction_word[7] }}, instruction_word[ 7:0] };
 			unsigned_arg = { 4'h0, instruction_word[ 7:0] };
 		end
 		
-		2: begin
+		1: begin
 			signed_arg = 
 			{ {8{ instruction_word[3] }}, instruction_word[ 3:0] };
 			unsigned_arg = { 8'h00, instruction_word[ 3:0] };
 		end
 		
-		3: begin
+		2: begin
 			signed_arg = code_out;
 			unsigned_arg = code_out;
 		end
@@ -104,7 +108,8 @@ module core (
 	wire [11:0] data_in = running ? number_out : host_word_in;	
 	wire [11:0] data_out;
 	wire data_write = 
-		running ? i_store : ( host_write && (mem_seg == 1));
+		running ? instruction == i_store && execute 
+		: ( host_write && (mem_seg == 1));
 	wire [11:0] data_addr = running ? TOS : mem_addr;
 	
 
@@ -135,7 +140,9 @@ module core (
 
 	wire [11:0] number_in = running ? TOS : host_word_in;
 	wire [11:0] number_out;
-        wire number_write = running ? ( i_swap || i_literal )
+        wire number_write = running 
+		? instruction == i_swap && execute 
+			|| instruction == i_literal && cycle == 6
 		: ( host_write && (mem_seg == 3));
 	wire [7:0] number_addr = running ? SP : mem_addr[7:0];
 
@@ -149,11 +156,12 @@ module core (
 		.write( number_write )
 	);
 
-// Return stack data comes from PC, address from RSP
+// Return stack data comes from TEMP, address from RSP
 
-	wire [11:0] return_in = running ? PC : host_word_in;
+	wire [11:0] return_in = running ? TEMP : host_word_in;
 	wire [11:0] return_out;
-	wire return_write = running ? i_call : ( host_write && (mem_seg == 4));
+	wire return_write = running ? instruction == i_call && cycle == 6 
+		: ( host_write && (mem_seg == 4));
 	wire [7:0] return_addr = running ? RSP : mem_addr[7:0];
 
 	RAM #(
@@ -165,6 +173,20 @@ module core (
 		.clock( clk ),
 		.write( return_write )
 	);
+	
+// Temp register for delayed operand handling
+
+	reg [11:0] TEMP;
+	
+	always @( posedge( clk )) 
+		if( execute )
+		case( instruction )
+		
+		i_literal : TEMP <= signed_arg;
+		
+		i_call : TEMP <= PC;
+		
+		endcase
 	
 // START/HALT logic
 
@@ -198,6 +220,8 @@ module core (
 		endcase
 
 	wire reg_write = host_write && (mem_seg == 5);
+	
+// Program counter (PC)
 
 	reg [11:0] PC;
 	
@@ -207,13 +231,26 @@ module core (
 		if( !running ) begin
 			if( pc_write ) PC <= host_word_in;
 		end
-		else begin
-			if( i_return ) PC <= return_out;
-			if( i_tsz && TOS == 0 ) PC <= PC + 1;
-			if( i_call ) PC <= unsigned_arg;
-			if( i_jump ) PC <= PC + signed_arg;
-			if( cycle == 0 ) PC <= PC + 1;
-		end
+		else if( execute )
+		case( instruction )
+		
+		i_return : PC <= return_out;
+		
+		i_tsz : if( TOS == 0 ) PC <= PC + 1;
+		
+		i_call : PC <= unsigned_arg;
+		
+		i_jump : PC <= PC + signed_arg;
+		
+		i_extend : if( cycle == 5 ) PC <= PC + 1;
+		
+		i_literal : if( cycle == 5 ) PC <= PC + 1;
+		
+		endcase
+		else if( cycle == 0 ) PC <= PC + 1;
+		
+
+// Return stack pointer (RSP)
 	
 	reg [7:0] RSP;
 	
@@ -223,7 +260,16 @@ module core (
 		if( !running ) begin
 			if( rsp_write ) RSP <= host_word_in[7:0];
 		end
-		// else do processor stuff
+		else if( execute )
+		case( instruction )
+		
+		i_call : RSP <= RSP + 1;
+		
+		i_return : RSP <= RSP - 1;
+		
+		endcase
+		
+// Top of stack (TOS), where arithmetic happens
 	
 	reg [11:0] TOS;
 	
@@ -233,7 +279,32 @@ module core (
 		if( !running ) begin
 			if( tos_write ) TOS <= host_word_in;
 		end
-		// else do processor stuff
+		else if( execute )
+		case( instruction )
+		
+		i_neg : TOS <= -TOS;
+
+		i_not : TOS <= ~TOS;
+
+		i_half : TOS <= { TOS[11], TOS[11:1] };
+
+		i_add : TOS <= TOS + number_out;
+
+		i_and : TOS <= TOS & number_out;
+
+		i_fetch : TOS <= data_out;
+
+		i_store : TOS <= number_out;
+
+		i_swap : TOS <= number_out;
+
+		i_drop : TOS <= number_out;
+
+		endcase
+		else if( instruction == i_literal && cycle == 6 ) TOS <= TEMP;
+
+		
+// Number stack pointer (SP)
 
 	reg [7:0] SP;
 	
@@ -243,21 +314,51 @@ module core (
 		if( !running ) begin
 			if( sp_write ) SP <= host_word_in[7:0];
 		end
-		// else do processor stuff
+		else if( execute )
+		case( instruction )
+		
+		i_literal : SP <= SP + 1;
+			
+		i_add : SP <= SP - 1;
+		
+		i_and : SP <= SP - 1;
+		
+		i_store : SP <= SP - 1;
+		
+		i_drop : SP <= SP - 1;
+		
+		endcase
 	
-// Intruction cycle
+// Instruction cycle
 
 	reg [2:0] cycle;
 	
-	wire last_cycle = cycle == 6 || execute && instruction[3:2] == 2'b11;
+	wire last_cycle = cycle == 6;
 	
 	always @( posedge( clk ))
-		if( !running || last_cycle ) 
-			cycle <= 0;
-		else
-			cycle = cycle + 1 ;
+		if( !running ) cycle <= 0;
+		else case( cycle )
+		
+		0: 	cycle <= 1;
+		
+		1:	if( long_inst ) cycle <= 6;
+			else cycle <= 2;
+			
+		2:	cycle <= 3;
+		
+		3:	if( long_inst ) cycle <= 6;
+			else cycle <= 4;
+			
+		4:	cycle <= 5;
+		
+		5:	cycle <= 6;
+		
+		default: cycle <= 0;
+		
+		endcase
 
-	wire execute = ( cycle == 2 ) || ( cycle == 4 ) || ( cycle == 6 );
+
+	wire execute = cycle[0];	// odd numbered steps
 
 	assign status = {8'b0, cycle == 0, cycle == 1, cycle == 2, cycle == 3, cycle == 4, cycle == 5, cycle == 6, running};
 	
