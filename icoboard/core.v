@@ -34,20 +34,18 @@ module core (
 	reg [11:0] instruction_word;
 	
 	always @( posedge( clk ))
-		if( cycle == 0 ) instruction_word <= code_out;
+		if( cycle == first ) instruction_word <= code_out;
 
 	reg [3:0] instruction;
 	
 	always @(cycle or instruction_word )
 		case( cycle )
 		
-		1: instruction = instruction_word[11:8];
+		xeq1: instruction = instruction_word[11:8];
 		
-		3: instruction = instruction_word[7:4];
+		xeq2: instruction = instruction_word[7:4];
 		
-		5: instruction = instruction_word[3:0];
-		
-		6: instruction = instruction_word[3:0];  // for literal and call
+		xeq3: instruction = instruction_word[3:0];
 		
 		default : instruction = 0;
 		
@@ -75,21 +73,21 @@ module core (
 	reg [11:0] signed_arg, unsigned_arg;
 	
 	always @( cycle or instruction_word or code_out )
-		case( cycle[2:1] )
+		case( cycle )
 		
-		0: begin
+		xeq1: begin
 			signed_arg = 
 			{ {4{ instruction_word[7] }}, instruction_word[ 7:0] };
 			unsigned_arg = { 4'h0, instruction_word[ 7:0] };
 		end
 		
-		1: begin
+		xeq2: begin
 			signed_arg = 
 			{ {8{ instruction_word[3] }}, instruction_word[ 3:0] };
 			unsigned_arg = { 8'h00, instruction_word[ 3:0] };
 		end
 		
-		2: begin
+		xeq3: begin
 			signed_arg = code_out;
 			unsigned_arg = code_out;
 		end
@@ -100,8 +98,7 @@ module core (
 		end
 		endcase
 
-		
-	
+
 // The multiplexing here implements data flows for
 // the fetch and store instructions.
 		
@@ -142,7 +139,7 @@ module core (
 	wire [11:0] number_out;
         wire number_write = running 
 		? instruction == i_swap && execute 
-			|| instruction == i_literal && cycle == 6
+			|| finish_literal
 		: ( host_write && (mem_seg == 3));
 	wire [7:0] number_addr = running ? SP : mem_addr[7:0];
 
@@ -160,7 +157,7 @@ module core (
 
 	wire [11:0] return_in = running ? TEMP : host_word_in;
 	wire [11:0] return_out;
-	wire return_write = running ? instruction == i_call && cycle == 6 
+	wire return_write = running ? finish_call 
 		: ( host_write && (mem_seg == 4));
 	wire [7:0] return_addr = running ? RSP : mem_addr[7:0];
 
@@ -187,6 +184,20 @@ module core (
 		i_call : TEMP <= PC;
 		
 		endcase
+
+// Triggers for TEMP transfers
+		
+	reg finish_literal;
+	
+	always @( posedge( clk )) 
+		finish_literal = instruction == i_literal;
+	
+	reg finish_call;
+	
+	always @( posedge( clk )) 
+		finish_call = instruction == i_call;
+	
+	
 	
 // START/HALT logic
 
@@ -194,7 +205,7 @@ module core (
 	
 	always @( posedge( clk ))
 		if( start ) running <= 1;
-		else if( halt_request && last_cycle ) running <= 0;
+		else if( halt_request && cycle == last ) running <= 0;
 	
 	always @( posedge( clk ))
 		if( halt ) halt_request <= 1;	  
@@ -242,12 +253,12 @@ module core (
 		
 		i_jump : PC <= PC + signed_arg;
 		
-		i_extend : if( cycle == 5 ) PC <= PC + 1;
+		i_extend : if( cycle == xeq3 ) PC <= PC + 1;
 		
-		i_literal : if( cycle == 5 ) PC <= PC + 1;
+		i_literal : if( cycle == xeq3 ) PC <= PC + 1;
 		
 		endcase
-		else if( cycle == 0 ) PC <= PC + 1;
+		else if( cycle == first ) PC <= PC + 1;
 		
 
 // Return stack pointer (RSP)
@@ -301,7 +312,7 @@ module core (
 		i_drop : TOS <= number_out;
 
 		endcase
-		else if( instruction == i_literal && cycle == 6 ) TOS <= TEMP;
+		else if( finish_literal ) TOS <= TEMP;
 
 		
 // Number stack pointer (SP)
@@ -331,35 +342,70 @@ module core (
 	
 // Instruction cycle
 
+// Idle waiting for running to be asserted. Once running is asserted,
+// memory outputs will be valid at the next clock edge,
+// so the next cycle can be first.
+
+	parameter idle = 0;
+	
+// First cycle captures instruction. 
+// Initiates prefetch of next instruction or long operand.
+
+	parameter first = 1;
+
+// Execute cycles for the three subinstructions.
+
+	parameter xeq1 = 2, xeq2 = 4, xeq3 = 6;
+
+// Wait for memory update.
+
+	parameter wait1 = 3, wait2 = 5;
+	
+// Last memory update cycle before next instruction fetch.
+
+	parameter last = 7;
+
 	reg [2:0] cycle;
 	
-	wire last_cycle = cycle == 6;
-	
 	always @( posedge( clk ))
-		if( !running ) cycle <= 0;
+		if( !running ) cycle <= idle;
 		else case( cycle )
 		
-		0: 	cycle <= 1;
+		idle: 	cycle <= first;
 		
-		1:	if( long_inst ) cycle <= 6;
-			else cycle <= 2;
+		first:	cycle <= xeq1;
+		
+		xeq1:	if( long_inst ) cycle <= last;
+			else cycle <= wait1;
 			
-		2:	cycle <= 3;
+		wait1:	cycle <= xeq2;
 		
-		3:	if( long_inst ) cycle <= 6;
-			else cycle <= 4;
+		xeq2:	if( long_inst ) cycle <= last;
+			else cycle <= wait2;
+		
+		wait2:	cycle <= xeq3;
 			
-		4:	cycle <= 5;
+		xeq3:	cycle <= last;
 		
-		5:	cycle <= 6;
-		
-		default: cycle <= 0;
-		
+		last:	cycle <= first;
+				
 		endcase
 
 
-	wire execute = cycle[0];	// odd numbered steps
-
-	assign status = {8'b0, cycle == 0, cycle == 1, cycle == 2, cycle == 3, cycle == 4, cycle == 5, cycle == 6, running};
+	wire execute = cycle == xeq1 || cycle == xeq2 || cycle == xeq3;	
 	
+//	assign status = {8'b0, cycle == 0, cycle == 1, cycle == 2, cycle == 3, cycle == 4, cycle == 5, cycle == 6, running};
+
+	reg [15:0] toggles;
+	
+	always @( posedge( clk )) begin
+		if( finish_literal )
+			toggles[0] <= !toggles[0];
+		if( instruction == i_literal )
+			toggles[6:1] <= toggles[6:1] + 1;
+		if(  cycle == last )
+			toggles[7] <= !toggles[7];
+		end
+		
+	assign status = toggles;
 endmodule
