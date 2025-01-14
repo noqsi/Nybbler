@@ -22,79 +22,68 @@ Instructions are encoded as four bits (nybbles), packed into instruction word. W
 *Long* instructions take the remaining nybbles of the instruction word as an operand. If the long instruction is in the last nybble of an instruction word, the word at the location the PC points to is taken as its operand. This is commonly the word following the instruction word. However, if the instruction word contains instruction(s) that modify the PC (**return** or **tsz**), that modified PC will supply the address of the operand.
  
 ## Opcodes
-Hex | ASM | LSE | S/L | Summary
+Hex | ASM | Nyb | S/L | Summary
 -------- | ----- | ---- | ------ | ----
-0 | nop	| {} | S | No operation
-1 | half | 2/ | S | Divide TOS by two
-2 | neg	| neg | S | Negate TOS
-3 | not	| ~ | S | Bitwise not
-4 | return | ] | S | Return from function
-5 | tsz | (if) | S | Test, skip if zero
-6 | add	| + | S | Add TOS to NOS
-7 | and	| & | S | Bitwise and
-8 | fetch | @ | S | Replace TOS with its target in memory
-9 | store | ! | S | NOS to TOS target, drop both
-A | swap | swap | S | Swap NOS with TOS
-B | dup | dup | S | Duplicate TOS
-C | call | call | L | Call function
-D | extend | extend | L | Undefined: for future extensions
-E | jump | jump | L | Relative jump to code
-F | literal | literal | L | Put literal value on stack
+0 | .nop	| {} | S | No operation
+1 | .half | 2/ | S | Divide TOS by two
+2 | .neg	| neg | S | Negate TOS
+3 | .not	| ~ | S | Bitwise not
+4 | .return | /\ | S | Return from function
+5 | .snz | (ifz) | S | Skip if nonzero
+6 | .add	| + | S | Add TOS to NOS
+7 | .and	| & | S | Bitwise and
+8 | .fetch | @ | S | Replace TOS with its target in memory
+9 | .store | (!) | S | NOS to TOS target, drop TOS
+A | .swap | swap | S | Swap NOS with TOS
+B | .drop | drop | S | Drop TOS
+C | .extend | extend | L | Undefined: for future extensions
+D | .call | call | L | Call function
+E | .jump | jump | L | Relative jump to code
+F | .literal | literal | L | Put literal value on stack
 
 ## Operation details
-### nop {}
+### .nop {}
 This does nothing. Its principal use is to fill out unused nybbles in instruction words.
-### return ]
+### .return /\
 Return from function. Pops the return address from the return stack into the PC.
-### tsz (if)
-If TOS is zero, skip the next instruction. TOS is dropped. 
-### half 2/
-Shift the TOS right by one. The most significant bit is unchanged. This is thus a signed divide by 2. The least significant bit shifts into the **carry** register.
-### add +
-Add TOS to NOS, dropping TOS. This also modifies the **carry** register.
-### neg
+### .snz (ifz)
+If TOS is zero, skip the next instruction.
+### .half 2/
+Shift the TOS right by one. The most significant bit is unchanged. This is thus a signed divide by 2.
+### .add +
+Add TOS to NOS, dropping TOS.
+### .neg
 Negate the TOS (twos complement).
-### and &
+### .and &
 Logical bitwise and of TOS with NOS. TOS is dropped, with the modified NOS becoming the TOS.
-### not ~
+### .not ~
 Complement bits in the TOS.
-### fetch @
+### .fetch @
 TOS holds an address in data memory. Replace TOS with the contents of the addressed memory word.
-### store !
-TOS holds an address in data memory. Store NOS at that memory location, drop both TOS ans NOS.
-### swap
+### .store (!)
+TOS holds an address in data memory. Store NOS at that memory location, drop TOS.
+### .swap
 Swap TOS and NOS.
-### dup
+### .dup
 Duplicate TOS, push duplicate on stack.
-### call
+### .call
 Push PC on return stack, set PC to long operand.
-### jump
+### .jump
 Add long operand to PC. If the operand is part of the instruction word, it is sign-extended to allow backward jumps from compact instructions.
-### literal
+### .literal
 Push long operand on stack. If the operand is part of the instruction word, it is sign-extended to allow negative literals in compact instructions.
-### extend
+### .extend
 Reserved for future extensions.
 
 ## Flow Control
-Instructions **call**, **return**, **jump**, and **tsz** control the processor's execution trajectory by modifying the PC. There is no flow control within instruction words: if an instruction word is fetched for execution, every instruction in that word will be executed.
+Instructions **call**, **return**, **jump**, and **snz** control the processor's execution trajectory by modifying the PC. There is no flow control within instruction words: if an instruction word is fetched for execution, every instruction in that word will be executed.
 
 ## Examples
 
 ```
-drop		# functional version
-	tsz
-	return
-	return
-
-# Inline version of drop
-	tsz
-	nop
-
-# Three way conditional jump
-	dup literal 
-	0x8000	# assume 16 bit version
-	and tsz tsz jump
-	neg_target
-	pos_target
-	zero_target
+dup :asm		# duplicate stack top
+	0 .literal
+	.store 0 .literal 
+	.fetch .return
+	asm;
 ```
