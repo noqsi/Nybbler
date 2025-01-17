@@ -1,10 +1,14 @@
+# case construct
+(case) : swap dup rot =
+case : ' (case) >code ' |jmp >code heritage? if >code || drop ' {nothing} >code
+' case immediate
+
+
 cloc :variable	# current location in code space
 dloc :variable	# current location in data space
 iword :variable # current instruction word under construction
 islot :variable	# subinstruction slots remaining in current word
 
-.label : // cloc @ :def >named_constant< cinit
-' .label sooner
 
 # iempty yield nothing
 # empty the instruction under contruction
@@ -12,7 +16,7 @@ iempty : 3 islot ! 0 iword !
 
 iempty 0 cloc ! 0 dloc ! # initialize
 
-!code : \ 1000 + >UAR >MEM
+!code : CODE + >UAR >MEM
 
 # i >code++ yields nothing
 # write i to code memory
@@ -22,6 +26,9 @@ iempty 0 cloc ! 0 dloc ! # initialize
 # if the current instruction is empty, do nothing
 # otherwise, write it out, 
 // : islot @ 3 = || iword @ >code++ iempty
+
+.label : // cloc @ :def >named_constant< cinit
+' .label sooner
 
 iword-append : iword @ 16 * + iword !
 
@@ -51,4 +58,23 @@ emit-long : iword-append islot @ finish-long
 .extend : 12 emit-long
 .call : 13 emit-long
 .jump : 14 emit-long
-.fetch : 15 emit-long
+.literal : 15 emit-long
+
+# Scratch variable locations
+
+-8 ;a :constant
+-7 ;b :constant
+-6 ;c :constant
+-5 ;d :constant
+-4 ;e :constant
+-3 ;f :constant
+-2 ;g :constant
+-1 ;h :constant
+0 ;s :constant
+1 ;t :constant
+2 ;u :constant
+3 ;v :constant
+4 ;w :constant
+5 ;x :constant
+6 ;y :constant
+7 ;z :constant

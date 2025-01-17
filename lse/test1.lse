@@ -1,11 +1,11 @@
 .or	.label
-	.not swap .not 
+	.not .swap .not 
 	.and .not .return
 
 .xor	.label
 	;a .literal 
 	.store .swap ;b .literal
-	.store .or call
+	.store .or .call
 	;a .literal
 	.fetch ;b .literal
 	.fetch .and .not
@@ -13,15 +13,15 @@
 	
 test	.label
 
-	\ f50 .literal
-	.dup
-	\ fa0 .literal
+	.nop .nop \ f50 .literal
+	.nop .nop \ fa0 .literal
 	.or .call
-	;q .literal
+	;s .literal
 	.store
+	.nop .nop \ f50 .literal
 	.xor .call
-	;r .literal
-	store
-	-1 .jump
+	;t .literal
+	.store
+	// -1 .jump
 	
 	
