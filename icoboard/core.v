@@ -56,7 +56,7 @@ module core (
 	parameter i_neg = 2 ;
 	parameter i_not = 3 ;
 	parameter i_return = 4 ;
-	parameter i_tsz = 5 ;
+	parameter i_snz = 5 ;
 	parameter i_add = 6 ;
 	parameter i_and = 7 ;
 	parameter i_fetch = 8 ;
@@ -247,7 +247,7 @@ module core (
 		
 		i_return : PC <= return_out;
 		
-		i_tsz : if( TOS == 0 ) PC <= PC + 1;
+		i_snz : if( TOS != 0 ) PC <= PC + 1;
 		
 		i_call : PC <= unsigned_arg;
 		
