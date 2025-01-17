@@ -1,0 +1,54 @@
+cloc :variable	# current location in code space
+dloc :variable	# current location in data space
+iword :variable # current instruction word under construction
+islot :variable	# subinstruction slots remaining in current word
+
+.label : // cloc @ :def >named_constant< cinit
+' .label sooner
+
+# iempty yield nothing
+# empty the instruction under contruction
+iempty : 3 islot ! 0 iword !
+
+iempty 0 cloc ! 0 dloc ! # initialize
+
+!code : \ 1000 + >UAR >MEM
+
+# i >code++ yields nothing
+# write i to code memory
+>code++ : cloc @ !code cloc @ 1 + cloc !
+
+# // yields nothing
+# if the current instruction is empty, do nothing
+# otherwise, write it out, 
+// : islot @ 3 = || iword @ >code++ iempty
+
+iword-append : iword @ 16 * + iword !
+
+# i emit-short yields nothing
+emit-short : iword-append islot @ 1 - dup islot ! 0= && //
+
+finish-long : drop iword @ >code++ >code++ iempty
+finish-long : 2 case drop \ 00f & iword @ 16 * | >code++ iempty
+finish-long : 3 case drop \ 0ff & iword @ 256 * | >code++ iempty
+
+emit-long : iword-append islot @ finish-long
+
+# opcodes
+
+.nop : 0 emit-short
+.half : 1 emit-short
+.neg : 2 emit-short
+.not : 3 emit-short
+.return : 4 emit-short
+.snz : 5 emit-short
+.add : 6 emit-short
+.and : 7 emit-short
+.fetch : 8 emit-short
+.store : 9 emit-short
+.swap : 10 emit-short
+.drop : 11 emit-short
+.extend : 12 emit-long
+.call : 13 emit-long
+.jump : 14 emit-long
+.fetch : 15 emit-long

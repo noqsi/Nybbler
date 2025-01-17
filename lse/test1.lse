@@ -1,0 +1,27 @@
+.or	.label
+	.not swap .not 
+	.and .not .return
+
+.xor	.label
+	;a .literal 
+	.store .swap ;b .literal
+	.store .or call
+	;a .literal
+	.fetch ;b .literal
+	.fetch .and .not
+	.and .return
+	
+test	.label
+
+	\ f50 .literal
+	.dup
+	\ fa0 .literal
+	.or .call
+	;q .literal
+	.store
+	.xor .call
+	;r .literal
+	store
+	-1 .jump
+	
+	
