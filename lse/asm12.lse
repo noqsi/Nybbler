@@ -60,6 +60,10 @@ emit-long : iword-append islot @ finish-long
 .jump : 14 emit-long
 .literal : 15 emit-long
 
+# macro for absolute jump (labels are absolute)
+
+.jlabel : cloc @ 1 + - .jump
+
 # Scratch variable locations
 
 -8 ;a :constant

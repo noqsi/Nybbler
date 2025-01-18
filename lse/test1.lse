@@ -1,3 +1,6 @@
+" pi.lse" load
+" asm12.lse" load
+
 .or	.label
 	.not .swap .not 
 	.and .not .return
@@ -13,15 +16,24 @@
 	
 test	.label
 
-	.nop .nop \ f50 .literal
-	.nop .nop \ fa0 .literal
+	.nop .nop \ 50f .literal
+	.nop .nop \ a0f .literal
 	.or .call
 	;s .literal
 	.store
-	.nop .nop \ f50 .literal
+	// .nop .nop \ 50f .literal
 	.xor .call
 	;t .literal
-	.store
-	// -1 .jump
+	.store .drop
+end	.label
+	end .jlabel
+
+
+" Starting..." ,t nl
+DATA >UAR dump16
+test >PC START >CMD
+1000 usec HALT >CMD
+" Result:" ,t nl
+DATA >UAR dump16
 	
-	
+steps : test >PC 20 s iterate

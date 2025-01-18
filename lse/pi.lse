@@ -40,11 +40,12 @@ REGS 3 + SP :constant
 <UDR : 1 ico-get 256 * 0 ico-get +
 
 # n >UDR yields nothing
->UDR : dup 256 / 0 ico-put DR->DRX >CMD 0 ico-put
+# mask so / may be used for shift
+>UDR : \ fff & dup 256 / 0 ico-put DR->DRX >CMD 0 ico-put
 
 # 16 bit address
 # n >UAR yields nothing
->UAR : dup 256 / 0 ico-put DR->ARX >CMD 0 ico-put DR->AR >CMD
+>UAR : \ ffff & dup 256 / 0 ico-put DR->ARX >CMD 0 ico-put DR->AR >CMD
 
 # Read/write memory from UAR address
 
