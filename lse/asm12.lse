@@ -41,6 +41,37 @@ finish-long : 3 case drop \ 0ff & iword @ 256 * | >code++ iempty
 
 emit-long : iword-append islot @ finish-long
 
+# n check-signed yields n
+# n check-unsigned yields n
+# Print warning if host number can't be represented by 12 bits
+
+12tosigned : \ fff & dup \ 800 & 0= || -4096 +
+
+signed-wraps : dup -2048 < || dup 2047 >
+warn-signed : signed-wraps && " Warning: " ,t dup , \
+	"  wraps to " ,t dup 12tosigned ,
+	
+unsigned-wraps : dup 0 < || dup 4095 >
+warn-unsigned : unsigned-wraps && " Warning: " ,t dup , \
+	"  wraps to " ,t dup \ fff & ,
+
+# n check-signed yields n12
+# Checks to see if a long argument can fit in the
+# available slots (one less than islot). If it won't, force
+# it into the next word by setting islot to 1.
+# Masks n to 12 bits.
+
+(check-signed) : drop # default is to do nothing
+(check-signed) : 3 case drop dup \ f80 < && dup \ 07f > && 1 islot !
+(check-signed) : 2 case drop dup \ ff8 < && dup \ 007 > && 1 islot !
+check-signed : warn-signed \ fff & islot @ (check-signed)
+
+(check-unsigned) : drop # default is to do nothing
+(check-unsigned) : 3 case drop dup \ 0ff > && 1 islot !
+(check-unsigned) : 2 case drop dup \ 00f > && 1 islot !
+check-unsigned : warn-unsigned \ fff & islot @ (check-unsigned)
+
+
 # opcodes
 
 .nop : 0 emit-short
@@ -55,10 +86,10 @@ emit-long : iword-append islot @ finish-long
 .store : 9 emit-short
 .swap : 10 emit-short
 .drop : 11 emit-short
-.extend : 12 emit-long
-.call : 13 emit-long
-.jump : 14 emit-long
-.literal : 15 emit-long
+.extend : check-unsigned 12 emit-long
+.call : check-unsigned 13 emit-long
+.jump : check-signed 14 emit-long
+.literal : check-signed 15 emit-long
 
 # macro for absolute jump (labels are absolute)
 
