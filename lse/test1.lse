@@ -16,12 +16,12 @@
 	
 test	.label
 
-	.nop .nop \ 50f .literal
-	.nop .nop \ a0f .literal
+	\ 50f .literal
+	\ a0f .literal
 	.or .call
 	;s .literal
 	.store
-	// .nop .nop \ 50f .literal
+	\ 50f .literal
 	.xor .call
 	;t .literal
 	.store .drop
