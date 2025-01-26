@@ -49,7 +49,7 @@ Return from function. Pops the return address from the return stack into the PC.
 ### .snz (ifz)
 If TOS is zero, skip the next instruction.
 ### .half 2/
-Shift the TOS right by one. The most significant bit is unchanged. This is thus a signed divide by 2.
+Shift the TOS right by one. The most significant bit is unchanged. This is thus a signed divide by 2, rounded down.
 ### .add +
 Add TOS to NOS, dropping TOS.
 ### .neg
@@ -64,14 +64,14 @@ TOS holds an address in data memory. Replace TOS with the contents of the addres
 TOS holds an address in data memory. Store NOS at that memory location, drop TOS.
 ### .swap
 Swap TOS and NOS.
-### .dup
+### .drop
 Duplicate TOS, push duplicate on stack.
 ### .call
 Push PC on return stack, set PC to long operand.
 ### .jump
 Add long operand to PC. If the operand is part of the instruction word, it is sign-extended to allow backward jumps from compact instructions.
 ### .literal
-Push long operand on stack. If the operand is part of the instruction word, it is sign-extended to allow negative literals in compact instructions.
+Push long operand on stack.
 ### .extend
 Reserved for future extensions.
 
