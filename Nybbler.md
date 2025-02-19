@@ -9,7 +9,7 @@
 
 For any implementation, binary data comes in words whose size is a fixed multiple of four bits. 8, 12, 16, 20, ... bit implementations are possible. 4 bits is logically possible but unlikely to be useful. Instruction and data words are the same size.
 
-Data encoding is modular two's complement binary. Addresses and literal data embedded within instruction words are sign-extended when used.
+Data encoding is modular two's complement binary.  Jump offsets embedded within instruction words are sign-extended when used.
 
 ## Memory model
 
@@ -19,7 +19,7 @@ Memory is addressed as words of the implementation's fixed size. Minimal impleme
 
 Instructions are encoded as four bits (nybbles), packed into instruction word. When an instruction word is executed, all instructions in the word are executed in sequence.
 
-*Long* instructions take the remaining nybbles of the instruction word as an operand. If the long instruction is in the last nybble of an instruction word, the word at the location the PC points to is taken as its operand. This is commonly the word following the instruction word. However, if the instruction word contains instruction(s) that modify the PC (**return** or **tsz**), that modified PC will supply the address of the operand.
+*Long* instructions take the remaining nybbles of the instruction word as an operand. If the long instruction is in the last nybble of an instruction word, the word at the location the PC points to is taken as its operand. This is commonly the word following the instruction word. However, if the instruction word contains instruction(s) that modify the PC (**return** or **snz**), that modified PC will supply the address of the operand.
  
 ## Opcodes
 Hex | ASM | Nyb | S/L | Summary
@@ -36,10 +36,11 @@ Hex | ASM | Nyb | S/L | Summary
 9 | .store | (!) | S | NOS to TOS target, drop TOS
 A | .swap | swap | S | Swap NOS with TOS
 B | .drop | drop | S | Drop TOS
-C | .extend | extend | L | Undefined: for future extensions
-D | .call | call | L | Call function
-E | .jump | jump | L | Relative jump to code
-F | .literal | literal | L | Put literal value on stack
+C | .call | call | L | Call function
+D | .literal | literal | L | Put literal value on stack
+E | .extend | extend | L | Undefined: for future extensions
+F | .jump | jump | L | Relative jump to code
+
 
 ## Operation details
 ### .nop {}

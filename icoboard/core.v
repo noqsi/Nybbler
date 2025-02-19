@@ -63,10 +63,10 @@ module core (
 	parameter i_store = 9 ;
 	parameter i_swap = 10 ;
 	parameter i_drop = 11 ;
-	parameter i_extend = 12 ;
-	parameter i_call = 13 ;
-	parameter i_jump = 14 ;
-	parameter i_literal = 15 ;
+	parameter i_call = 12 ;
+	parameter i_literal = 13 ;
+	parameter i_extend = 14 ;
+	parameter i_jump = 15 ;
 	
 	wire long_inst = instruction[3:2] == 2'b11; // long instruction
 	
@@ -179,7 +179,7 @@ module core (
 		if( execute )
 		case( instruction )
 		
-		i_literal : TEMP <= signed_arg;
+		i_literal : TEMP <= unsigned_arg;
 		
 		i_call : TEMP <= PC;
 		
