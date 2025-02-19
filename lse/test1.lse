@@ -13,6 +13,11 @@
 	.fetch ;b .literal
 	.fetch .and .not
 	.and .return
+
+.dup	.label
+	;a .literal
+	.store ;a .literal
+	.fetch .return
 	
 test	.label
 
@@ -37,3 +42,5 @@ test >PC START >CMD
 DATA >UAR dump16
 	
 steps : test >PC 20 s iterate
+(stepthru) : s <PC end = || repeat
+stepthru : test >PC (stepthru)

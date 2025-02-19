@@ -113,3 +113,9 @@ check-unsigned : warn-unsigned \ fff & islot @ (check-unsigned)
 5 ;x :constant
 6 ;y :constant
 7 ;z :constant
+
+# Useful macros
+
+1+ : .not .neg
+1- : .neg .not
+.sub : .not .add
