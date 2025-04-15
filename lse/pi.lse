@@ -56,7 +56,7 @@ UARshadow :variable
 # <MEM yields n
 <MEM : READ >CMD <UDR
 # also increment UAR
-<MEM++ : READ INCAR | >CMD <UDR
+<MEM++ : READ INCAR | >CMD <UDR UARshadow @ 1 + UARshadow !
 
 # n >MEM yields nothing
 >MEM : >UDR WRITE >CMD
@@ -100,6 +100,16 @@ dump4096 : 256 dump16 iterate
 # dump a line of n words tagged with address
 
 dumpline : UARshadow @ ,h sp dump1 iterate nl
+
+# n dumplines yields nothing
+# dump n words as lines of 16
+(dumplines) : dup 16 < || 16 dumpline 16 - repeat
+dumplines : (dumplines) dumpline
+
+# n m dump@ yields nothing
+# Dump n words starting at m
+
+dump@ : >UAR 
 
 (fill4096) : 4096 count - >MEM++
 
