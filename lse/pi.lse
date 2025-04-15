@@ -43,9 +43,13 @@ REGS 3 + SP :constant
 # mask so / may be used for shift
 >UDR : \ fff & dup 256 / 0 ico-put DR->DRX >CMD 0 ico-put
 
+# Remember what's in UAR
+
+UARshadow :variable
+
 # 16 bit address
 # n >UAR yields nothing
->UAR : \ ffff & dup 256 / 0 ico-put DR->ARX >CMD 0 ico-put DR->AR >CMD
+>UAR : \ ffff & dup UARshadow ! dup 256 / 0 ico-put DR->ARX >CMD 0 ico-put DR->AR >CMD
 
 # Read/write memory from UAR address
 
@@ -56,7 +60,7 @@ REGS 3 + SP :constant
 
 # n >MEM yields nothing
 >MEM : >UDR WRITE >CMD
->MEM++ : >UDR WRITE INCAR | >CMD
+>MEM++ : >UDR WRITE INCAR | >CMD UARshadow @ 1 + UARshadow !
 
 # <PC yields n
 <PC : PC >UAR <MEM
@@ -91,6 +95,11 @@ dump1 : <MEM++ ,3h sp
 dump16 : 16 dump1 iterate nl
 
 dump4096 : 256 dump16 iterate
+
+# n dumpline yields nothing
+# dump a line of n words tagged with address
+
+dumpline : UARshadow @ ,h sp dump1 iterate nl
 
 (fill4096) : 4096 count - >MEM++
 
