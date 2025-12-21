@@ -109,7 +109,7 @@ dumplines : (dumplines) dumpline
 # n m dump@ yields nothing
 # Dump n words starting at m
 
-dump@ : >UAR 
+dump@ : >UAR dumplines
 
 (fill4096) : 4096 count - >MEM++
 
