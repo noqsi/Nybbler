@@ -66,7 +66,7 @@ TOS holds an address in data memory. Store NOS at that memory location, drop TOS
 ### .swap
 Swap TOS and NOS.
 ### .drop
-Duplicate TOS, push duplicate on stack.
+Drop TOS.
 ### .call
 Push PC on return stack, set PC to long operand.
 ### .jump
