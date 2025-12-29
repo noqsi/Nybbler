@@ -2,6 +2,7 @@
 #include <nyif.h>
 #include <pigpio.h>
 #include <sysexits.h>
+#include <stdlib.h>
 
 // Right shift for positive n, left for negative
 

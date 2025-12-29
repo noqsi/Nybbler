@@ -1,0 +1,22 @@
+# for now, start at loc 0
+
+	literal 0x48	H
+	call put
+	literal 0x65	e
+	call put
+	literal 0x6C	l
+	call put
+	literal 0x6C	l
+	call put
+	literal 0x6F	o
+	call put
+	literal 0
+	call exit
+
+# Host calls use jump -1, host detects this, compares pc to symbols
+# to figure out which call. Args on stack.
+
+put	jump	-1
+	drop return
+
+exit	jump	-1
