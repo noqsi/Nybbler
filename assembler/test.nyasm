@@ -10,7 +10,30 @@
 	call put
 	literal 0x6F	o
 	call put
-	literal 0
+
+world	data 0x20
+	data 0x57	W
+	data 111	o
+	data 114	r
+	data 108	l
+	data 100	d
+
+waddr	data world
+
+	literal 6	count
+woloop	snz
+	jump @woend
+	literal waddr
+	fetch fetch
+	call put
+	literal waddr
+	fetch not neg	addr++
+	literal waddr
+	store drop
+	neg not 	
+	jump @woloop	
+
+woend	literal 0
 	call exit
 
 # Host calls use jump -1, host detects this, compares pc to symbols
