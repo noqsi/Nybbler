@@ -1,15 +1,36 @@
-# for now, start at loc 0
+# Host calls use jump -1, host detects this, compares pc to symbols
+# to figure out which call. Args on stack. Guest is responsible for stack
+# manipulation, host only reads or modifies values, not stack pointer.
 
-	literal 0x48	H
-	call put
+# put byte
+putc	jump	-1
+	drop return
+
+# put word as hexadecimal
+
+putx	jump	-1
+	drop return
+
+# return TOS as exit code
+
+exit	jump	-1
+
+# output newline
+
+putnl	literal 10
+	call putc
+	return
+
+start	literal 0x48	H
+	call putc
 	literal 0x65	e
-	call put
+	call putc
 	literal 0x6C	l
-	call put
+	call putc
 	literal 0x6C	l
-	call put
+	call putc
 	literal 0x6F	o
-	call put
+	call putc
 
 world	data 0x20
 	data 0x57	W
@@ -25,21 +46,40 @@ woloop	snz
 	jump @woend
 	literal waddr
 	fetch fetch
-	call put
+	call putc
 	literal waddr
 	fetch not neg	addr++
 	literal waddr
 	store drop
 	neg not 	
-	jump @woloop	
+	jump @woloop
 
-woend	literal 0
+woend	literal 10
+	call putc
+	literal
+	0xf00
+	call putx
+	call putnl
+
+	literal 20
+cloop	snz
+	jump	@cend
+	call	count
+	call	putx
+	literal 0x20
+	call	putc
+	neg not
+	jump	@cloop
+cend	call putnl
+
+	literal 0
 	call exit
 
-# Host calls use jump -1, host detects this, compares pc to symbols
-# to figure out which call. Args on stack.
+counter	data	0
 
-put	jump	-1
-	drop return
-
-exit	jump	-1
+count	literal counter
+	fetch
+	not neg
+	literal counter
+	store return
+	
