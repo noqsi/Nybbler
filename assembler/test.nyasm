@@ -1,7 +1,6 @@
 # Host calls use jump -1, host detects this, compares pc to symbols
 # to figure out which call. Args on stack. Guest is responsible for stack
-# manipulation, host only reads or modifies values, not stack pointer.
-
+# manipulation, host only reads or modifies values, not stack pointer.	
 # put byte
 putc	jump	-1
 	drop return
@@ -42,7 +41,7 @@ world	data 0x20
 waddr	data world
 
 	literal 6	count
-woloop	snz
+woloop	snz		# test for zero
 	jump @woend
 	literal waddr
 	fetch fetch
@@ -53,8 +52,9 @@ woloop	snz
 	store drop
 	neg not 	
 	jump @woloop
+woend	=	.
 
-woend	literal 10
+	literal 10
 	call putc
 	literal
 	0xf00
@@ -70,7 +70,40 @@ cloop	snz
 	call	putc
 	neg not
 	jump	@cloop
-cend	call putnl
+cend	=	.
+	call putnl
+
+	literal 20
+floop	snz
+	jump	@fend
+	call	fib
+	call	putx
+	literal 0x20
+	call	putc
+	neg not
+	jump	@floop
+fend	=	.
+	call putnl
+
+# Fibonacci seeded tests
+
+# First, compute a number, print it
+	call fib
+	call putxsp
+
+# test the half instuction 
+	literal fn
+	fetch half
+	call putxsp
+
+# test the and instruction, using previous F number
+	literal fn
+	fetch
+	literal fn1
+	fetch and
+	call putxsp
+
+	call putnl
 
 	literal 0
 	call exit
@@ -82,4 +115,22 @@ count	literal counter
 	not neg
 	literal counter
 	store return
+
+# Fibonacci numbers
+
+fn1	data	1
+fn	data	1
+
+fib	literal	fn1
+	fetch
+	literal fn
+	fetch
+	literal fn1
+	store add
+	literal fn
+	store return	
 	
+putxsp	call putx
+	literal 0x20
+	call putc
+	return

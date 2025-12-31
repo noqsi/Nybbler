@@ -29,7 +29,13 @@ function evaluate( expr ) {
 	if( first ~ /[-+0-9]/ ) return strtonum( expr )
 	if( expr == "." ) return ilc
 	if( expr == ".." ) return dlc
-	return symtab[ expr ]
+	if( expr in symtab) return symtab[ expr ]
+	if( pass == 2 ) { 
+		print "Symbol", expr, "on line",
+			FNR, "is undefined" >"/dev/stderr"
+		exit(1)
+	}
+	return 0
 }
 
 function maskarg( arg, nybble ) {
@@ -42,7 +48,7 @@ function maskarg( arg, nybble ) {
 # Comments and blank lines
 
 /^#/{if( pass == 2 ) print; next}
-/^$/{if( pass == 2 ) print; next}
+/^\s*$/{if( pass == 2 ) print; next}
 
 # Symbol definitions
 
@@ -83,7 +89,8 @@ $2=="data"{
 	for( i=0; i<nybbles; ++i ){
 		token = $(i+2)
 		if( token in opcode ) inst = inst * 16 + opcode[ token]
-		else if( token == "" ) break
+		else if( length(token) == 0 ) break
+		else if( token ~ /#/ ) break
 		else{
 			inst = inst * 16^(3-i) + maskarg( evaluate( token ), i )
 			break
