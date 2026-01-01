@@ -16,13 +16,14 @@ BEGIN{
 	opcode["literal"]=13
 	opcode["extend"]=14
 	opcode["jump"]=15
+	for (i = 0; i < 256; i++) chrnum[ sprintf("%c", i) ] = i
 	ilc=0
 	dlc=0
 	FS = "[ \t\n]+"
 	pass = 1
 }
 
-function evaluate( expr ) {
+function evaluate( expr, first ) {
 	
 	first = substr( expr, 1, 1 )
 	if( first == "@" ) return evaluate( substr( expr, 2 )) - ilc
@@ -38,7 +39,7 @@ function evaluate( expr ) {
 	return 0
 }
 
-function maskarg( arg, nybble ) {
+function maskarg( arg, nybble, modulus ) {
 	modulus = 16^(3-nybble)
 	return ( arg % modulus + modulus ) % modulus
 }
@@ -79,6 +80,31 @@ $2=="data"{
 	next
 }
 	
+# Strings
+
+$2=="string"{
+	here = dlc++
+	if( $1 ) symtab[$1]=here
+	
+	match( $0, /[ \t]+string[ \t]/ )
+	str = substr( $0, RSTART + RLENGTH)
+	len = length( str )
+
+	if( pass == 2 ) {
+		printf "D %0*X %0*X %s\n",
+			nybbles, here, nybbles, len, $0
+	}
+	
+	for( i = 1; i <= len; i += 1 ) {
+		here = dlc++
+		if( pass == 2 ) {
+			chr = substr( str, i, 1 )
+			printf "D %0*X %0*X %s\n",
+			nybbles, here, nybbles, chrnum[ chr ], chr
+		}
+	}
+	next
+}
 
 # Program lines
 
