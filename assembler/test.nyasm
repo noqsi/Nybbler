@@ -1,3 +1,8 @@
+# Handy temporaries at low addresses
+
+tmpa	data	0
+tmpb	data	0
+
 # Host calls use jump -1, host detects this, compares pc to symbols
 # to figure out which call. Args on stack. Guest is responsible for stack
 # manipulation, host only reads or modifies values, not stack pointer.	
@@ -20,45 +25,32 @@ putnl	literal 10
 	call putc
 	return
 
-start	literal 0x48	H
-	call putc
-	literal 0x65	e
-	call putc
-	literal 0x6C	l
-	call putc
-	literal 0x6C	l
-	call putc
-	literal 0x6F	o
-	call putc
+# Output a counted string
+# Takes pointer to string on TOS
+# Uses tmpa
 
-world	data 0x20
-	data 0x57	W
-	data 111	o
-	data 114	r
-	data 108	l
-	data 100	d
-
-waddr	data world
-
-	literal 6	count
-woloop	snz		# test for zero
-	jump @woend
-	literal waddr
-	fetch fetch
+putstr	literal tmpa
+	store fetch	# save address, get count
+lputstr	snz		# test for zero
+	jump @eputstr
+	literal tmpa
+	fetch not neg	# fetch and increment address
+	literal tmpa
+	store fetch	# save address, fetch char
 	call putc
-	literal waddr
-	fetch not neg	addr++
-	literal waddr
-	store drop
-	neg not 	
-	jump @woloop
-woend	=	.
+	neg not 	# decrement count
+	jump @lputstr
+eputstr drop return
 
-	literal 10
-	call putc
-	literal
-	0xf00
-	call putx
+hello	string	Hello World!
+
+start	literal hello
+	call putstr
+	call putnl
+
+ctmsg	string Let's count:
+	literal ctmsg
+	call putstr
 	call putnl
 
 	literal 20
@@ -70,7 +62,12 @@ cloop	snz
 	call	putc
 	neg not
 	jump	@cloop
-cend	=	.
+cend	drop
+	call putnl
+
+fmsg	string Fibonacci numbers mod 2^12:
+	literal fmsg
+	call putstr
 	call putnl
 
 	literal 20
@@ -82,10 +79,22 @@ floop	snz
 	call	putc
 	neg not
 	jump	@floop
-fend	=	.
+fend	drop
 	call putnl
 
+	literal 0
+	call classify
+
 # Fibonacci seeded tests
+
+	literal 10
+fcloop	snz
+	jump	@fcend
+	call	fib
+	call	classify
+	neg not
+	jump	@fcloop
+fcend	drop
 
 # First, compute a number, print it
 	call fib
@@ -133,4 +142,45 @@ fib	literal	fn1
 putxsp	call putx
 	literal 0x20
 	call putc
+	return
+
+# Print TOS and classify as negative, zero or positive
+# Implementation is a bit inefficient so that I could try
+# a FORTRAN-II-style three way branch.
+
+classify literal tmpa
+	store
+	call putxsp
+	literal tmpa
+	fetch
+
+# Three way branch
+	
+	literal	
+	0x800	# Mask for sign bit
+	swap
+	snz and snz
+	jump	@zero
+	jump	@positive
+	jump	@negative
+
+negs	string is negative
+negative drop 
+	literal negs
+	call putstr
+	call putnl
+	return
+
+zeros	string is zero
+zero	drop
+	literal zeros
+	call putstr
+	call putnl
+	return
+
+poss	string is positive
+positive drop
+	literal poss
+	call putstr
+	call putnl
 	return
