@@ -95,6 +95,8 @@ fcloop	snz
 	jump	@fcend
 	call	fib
 	call	classify
+	call	fib
+	call	evenodd
 	neg not
 	jump	@fcloop
 fcend	drop
@@ -219,3 +221,29 @@ return2 push r2ok
 	return return
 
 r2ok	string Double return succeeded!
+
+
+# Two way (potentially long) branch
+
+evenodd	push tmpa
+	store
+	call putxsp
+	push tmpa
+	fetch push 1
+	and snz jump
+	@even
+	@odd
+fineo	call putstr
+	call putnl
+	return
+
+seven	string is even
+sodd	string is odd
+
+even	drop
+	push seven
+	jump @fineo
+
+odd	drop
+	push sodd
+	jump @fineo
