@@ -13,7 +13,7 @@ BEGIN{
 	opcode["swap"]=10
 	opcode["drop"]=11
 	opcode["call"]=12
-	opcode["literal"]=13
+	opcode["push"]=13
 	opcode["extend"]=14
 	opcode["jump"]=15
 	for (i = 0; i < 256; i++) chrnum[ sprintf("%c", i) ] = i

@@ -21,7 +21,7 @@ exit	jump	-1
 
 # output newline
 
-putnl	literal 10
+putnl	push 10
 	call putc
 	return
 
@@ -29,13 +29,13 @@ putnl	literal 10
 # Takes pointer to string on TOS
 # Uses tmpa
 
-putstr	literal tmpa
+putstr	push tmpa
 	store fetch	# save address, get count
 lputstr	snz		# test for zero
 	jump @eputstr
-	literal tmpa
+	push tmpa
 	fetch not neg	# fetch and increment address
-	literal tmpa
+	push tmpa
 	store fetch	# save address, fetch char
 	call putc
 	neg not 	# decrement count
@@ -44,21 +44,21 @@ eputstr drop return
 
 hello	string	Hello World!
 
-start	literal hello
+start	push hello
 	call putstr
 	call putnl
 
 ctmsg	string Let's count:
-	literal ctmsg
+	push ctmsg
 	call putstr
 	call putnl
 
-	literal 20
+	push 20
 cloop	snz
 	jump	@cend
 	call	count
 	call	putx
-	literal 0x20
+	push 0x20
 	call	putc
 	neg not
 	jump	@cloop
@@ -66,28 +66,31 @@ cend	drop
 	call putnl
 
 fmsg	string Fibonacci numbers mod 2^12:
-	literal fmsg
+	push fmsg
 	call putstr
 	call putnl
 
-	literal 20
+	push 20
 floop	snz
 	jump	@fend
 	call	fib
 	call	putx
-	literal 0x20
+	push 0x20
 	call	putc
 	neg not
 	jump	@floop
 fend	drop
 	call putnl
+	
+	call try2
+	call try3
 
-	literal 0
+	push 0
 	call classify
 
 # Fibonacci seeded tests
 
-	literal 10
+	push 10
 fcloop	snz
 	jump	@fcend
 	call	fib
@@ -101,28 +104,28 @@ fcend	drop
 	call putxsp
 
 # test the half instuction 
-	literal fn
+	push fn
 	fetch half
 	call putxsp
 
 # test the and instruction, using previous F number
-	literal fn
+	push fn
 	fetch
-	literal fn1
+	push fn1
 	fetch and
 	call putxsp
 
 	call putnl
 
-	literal 0
+	push 0
 	call exit
 
 counter	data	0
 
-count	literal counter
+count	push counter
 	fetch
 	not neg
-	literal counter
+	push counter
 	store return
 
 # Fibonacci numbers
@@ -130,17 +133,17 @@ count	literal counter
 fn1	data	1
 fn	data	1
 
-fib	literal	fn1
+fib	push	fn1
 	fetch
-	literal fn
+	push fn
 	fetch
-	literal fn1
+	push fn1
 	store add
-	literal fn
+	push fn
 	store return	
 	
 putxsp	call putx
-	literal 0x20
+	push 0x20
 	call putc
 	return
 
@@ -148,15 +151,15 @@ putxsp	call putx
 # Implementation is a bit inefficient so that I could try
 # a FORTRAN-II-style three way branch.
 
-classify literal tmpa
+classify push tmpa
 	store
 	call putxsp
-	literal tmpa
+	push tmpa
 	fetch
 
 # Three way branch
 	
-	literal	
+	push	
 	0x800	# Mask for sign bit
 	swap
 	snz and snz
@@ -166,21 +169,53 @@ classify literal tmpa
 
 negs	string is negative
 negative drop 
-	literal negs
+	push negs
 	call putstr
 	call putnl
 	return
 
 zeros	string is zero
 zero	drop
-	literal zeros
+	push zeros
 	call putstr
 	call putnl
 	return
 
 poss	string is positive
 positive drop
-	literal poss
+	push poss
 	call putstr
 	call putnl
 	return
+
+try3	call	down1
+	call	putstr
+	call	putnl
+	return
+
+down1	call	down2
+	push 1		# shouldn't get here
+	call exit
+	
+down2	call	return3
+	push 2		# shouldn't get here
+	call exit
+
+return3	push r3ok
+	return return return
+
+r3ok	string Tripple return succeeded!
+
+try2	call	mid
+	call	putstr
+	call	putnl
+	return
+
+mid	call	return2
+	push 3		# shouldn't get here
+	call exit
+
+return2 push r2ok
+	return return
+
+r2ok	string Double return succeeded!
