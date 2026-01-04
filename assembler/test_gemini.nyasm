@@ -1,0 +1,315 @@
+# Handy temporaries at low addresses
+
+tmpa    data    0
+tmpb    data    0
+
+# Host calls use jump -1, host detects this, compares pc to symbols
+# to figure out which call. Args on stack. Guest is responsible for stack
+# manipulation, host only reads or modifies values, not stack pointer.  
+# put byte
+putc    jump    -1
+    drop return
+
+# put word as hexadecimal
+
+putx    jump    -1
+    drop return
+
+# return TOS as exit code
+
+exit    jump    -1
+
+# output newline
+
+putnl   push 10
+    call putc
+    # --- DEBUG INSTRUMENTATION ---
+    push d_putnl
+    call putstr
+    # -----------------------------
+    return
+
+# Output a counted string
+# Takes pointer to string on TOS
+# Uses tmpb
+
+putstr  push tmpb
+    store fetch # save address, get count
+lputstr snz     # test for zero
+    jump @eputstr
+    push tmpb
+    fetch not neg   # fetch and increment address
+    push tmpb
+    store fetch # save address, fetch char
+    call putc
+    neg not     # decrement count
+    jump @lputstr
+eputstr drop return
+
+hello   string  Hello World!
+
+start   push hello
+    call putstr
+    call putnl
+
+ctmsg   string Let's count:
+    push ctmsg
+    call putstr
+    call putnl
+
+    push 20
+cloop   snz
+    jump    @cend
+    call    count
+    call    putx
+    push 0x20
+    call    putc
+    neg not
+    jump    @cloop
+cend    drop
+    call putnl
+
+fmsg    string Fibonacci numbers mod 2^12:
+    push fmsg
+    call putstr
+    call putnl
+
+    push 20
+floop   snz
+    jump    @fend
+    call    fib
+    call    putx
+    push 0x20
+    call    putc
+    neg not
+    jump    @floop
+fend    drop
+    call putnl
+    
+    call try2
+    call try3
+
+    push 0
+    call classify
+
+# Fibonacci seeded tests
+
+    push 10
+fcloop  snz
+    jump    @fcend
+    call    fib
+    call    classify
+    call    fib
+    call    evenodd
+    neg not
+    jump    @fcloop
+fcend   drop
+
+# First, compute a number, print it
+    call fib
+    call putxsp
+
+# test the half instuction
+    push fn
+    fetch half
+    call putxsp
+
+# test the and instruction, using previous F number
+    push fn
+    fetch
+    push fn1
+    fetch and
+    call putxsp
+
+    call putnl
+
+    push 0
+    call exit
+
+counter data    0
+
+count   push counter
+    fetch
+    not neg
+    push counter
+    store 
+    # --- DEBUG INSTRUMENTATION ---
+    push d_count
+    call putstr
+    # -----------------------------
+    return
+
+# Fibonacci numbers
+
+fn1 data    1
+fn  data    1
+
+fib push    fn1
+    fetch
+    push fn
+    fetch
+    push fn1
+    store add
+    push fn
+    store 
+    # --- DEBUG INSTRUMENTATION ---
+    push d_fib
+    call putstr
+    # -----------------------------
+    return  
+    
+putxsp  call putx
+    push 0x20
+    call putc
+    # --- DEBUG INSTRUMENTATION ---
+    push d_pxsp
+    call putstr
+    # -----------------------------
+    return
+
+# Print TOS and classify as negative, zero or positive
+# Implementation is a bit inefficient so that I could try
+# a FORTRAN-II-style three way branch.
+
+classify push tmpa
+    store
+    call putxsp
+    push tmpa
+    fetch
+
+# Three way branch
+    
+    push    
+    0x800   # Mask for sign bit
+    swap
+    snz and snz
+    jump    @zero
+    jump    @positive
+    jump    @negative
+
+negs    string is negative
+negative drop 
+    push negs
+    call putstr
+    call putnl
+    # --- DEBUG INSTRUMENTATION ---
+    push d_neg
+    call putstr
+    # -----------------------------
+    return
+
+zeros   string is zero
+zero    drop
+    push zeros
+    call putstr
+    call putnl
+    # --- DEBUG INSTRUMENTATION ---
+    push d_zero
+    call putstr
+    # -----------------------------
+    return
+
+poss    string is positive
+positive drop
+    push poss
+    call putstr
+    call putnl
+    # --- DEBUG INSTRUMENTATION ---
+    push d_pos
+    call putstr
+    # -----------------------------
+    return
+
+try3    call    down1
+    call    putstr
+    call    putnl
+    # --- DEBUG INSTRUMENTATION ---
+    push d_try3
+    call putstr
+    # -----------------------------
+    return
+
+down1   call    down2
+    push 1      # shouldn't get here
+    call exit
+    
+down2   call    return3
+    push 2      # shouldn't get here
+    call exit
+
+return3 push r3ok
+    # --- DEBUG INSTRUMENTATION ---
+    push d_ret3
+    call putstr
+    # -----------------------------
+    return return return
+
+r3ok    string Tripple return succeeded!
+
+try2    call    mid
+    call    putstr
+    call    putnl
+    # --- DEBUG INSTRUMENTATION ---
+    push d_try2
+    call putstr
+    # -----------------------------
+    return
+
+mid call    return2
+    push 3      # shouldn't get here
+    call exit
+
+return2 push r2ok
+    # --- DEBUG INSTRUMENTATION ---
+    push d_ret2
+    call putstr
+    # -----------------------------
+    return return
+
+r2ok    string Double return succeeded!
+
+
+# Two way (potentially long) branch
+
+evenodd push tmpa
+    store
+    call putxsp
+    push tmpa
+    fetch push 1
+    and snz jump
+    @even
+    @odd
+fineo   call putstr
+    call putnl
+    # --- DEBUG INSTRUMENTATION ---
+    push
+    d_evod
+    call putstr
+    # -----------------------------
+    return
+
+seven   string is even
+sodd    string is odd
+
+even    drop
+    push seven
+    jump @fineo
+
+odd drop
+    push sodd
+    jump @fineo
+
+# --- DEBUG STRINGS ---
+# Short strings to keep memory usage low, starting with | to separate from output
+d_putnl string |ret_pnl
+d_count string |ret_cnt
+d_fib   string |ret_fib
+d_pxsp  string |ret_pxs
+d_neg   string |ret_neg
+d_zero  string |ret_zer
+d_pos   string |ret_pos
+d_try3  string |ret_ty3
+d_ret3  string |ret_rt3
+d_try2  string |ret_ty2
+d_ret2  string |ret_rt2
+d_evod  string |ret_evo

@@ -180,8 +180,11 @@ module core (
 		case( instruction )
 		
 		i_literal : TEMP <= unsigned_arg;
+
+// Skip over address in two word call
 		
-		i_call : TEMP <= PC;
+		i_call : if( cycle == xeq3 ) TEMP <= PC + 1;
+				else TEMP <= PC;
 		
 		endcase
 
@@ -250,8 +253,11 @@ module core (
 		i_snz : if( TOS != 0 ) PC <= PC + 1;
 		
 		i_call : PC <= unsigned_arg;
+
+// Target is relative to address of second word in two word jump.
 		
-		i_jump : PC <= PC + signed_arg;
+		i_jump : if( cycle == xeq3 ) PC <= PC + signed_arg + 1;
+			 	else PC <= PC + signed_arg;
 		
 		i_extend : if( cycle == xeq3 ) PC <= PC + 1;
 		

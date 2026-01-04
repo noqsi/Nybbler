@@ -1,0 +1,86 @@
+# Handy temporaries at low addresses
+
+tmpa	data	0
+tmpb	data	0
+
+# Host calls use jump -1, host detects this, compares pc to symbols
+# to figure out which call. Args on stack. Guest is responsible for stack
+# manipulation, host only reads or modifies values, not stack pointer.	
+# put byte
+putc	jump	-1
+	drop return
+
+# put word as hexadecimal
+
+putx	jump	-1
+	drop return
+
+# return TOS as exit code
+
+exit	jump	-1
+
+# output newline
+
+putnl	push 10
+	call putc
+	return
+
+# Output a counted string
+# Takes pointer to string on TOS
+# Uses tmpa
+
+putstr	push tmpa
+	store fetch	# save address, get count
+lputstr	snz		# test for zero
+	jump @eputstr
+	push tmpa
+	fetch not neg	# fetch and increment address
+	push tmpa
+	store fetch	# save address, fetch char
+	call putc
+	neg not 	# decrement count
+	jump @lputstr
+eputstr drop return
+
+hello	string	Hello World!
+
+start	push hello
+	call putstr
+	call putnl
+
+	push 0x40
+	push 1
+	snz swap jump 
+	@four
+	@four
+	
+	half	# 0x0
+	half	# 0x1
+	half	# 0x2
+four	half	# 0x4
+	half	# 0x8
+	half	# 0x10
+	half	# 0x20
+	
+	call putx
+	call putnl
+	
+	call 
+	lctest
+	call putx
+	call putnl
+
+	push
+	0x111
+	call putx
+	call putnl
+	
+	push 0
+	call exit
+	
+.	=	0x111
+lctest	push 0x40
+	return
+	
+
+	
