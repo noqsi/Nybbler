@@ -22,3 +22,9 @@ test-jmp : test-jmp.nyobj nyasm.awk
 
 test-jmp.nyobj : test-jmp.nyasm
 	./nyasm.sh test-jmp.nyasm >test-jmp.nyobj
+	
+division : division.nyobj nyasm.awk
+	sudo ../host/nyrun <division.nyobj 
+
+division.nyobj : division.nyasm
+	./nyasm.sh division.nyasm >division.nyobj
