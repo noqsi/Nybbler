@@ -97,27 +97,11 @@ fcloop	snz
 	call	classify
 	call	fib
 	call	evenodd
+	call	fib
+	call	tryhalf
 	neg not
 	jump	@fcloop
 fcend	drop
-
-# First, compute a number, print it
-	call fib
-	call putxsp
-
-# test the half instuction 
-	push fn
-	fetch half
-	call putxsp
-
-# test the and instruction, using previous F number
-	push fn
-	fetch
-	push fn1
-	fetch and
-	call putxsp
-
-	call putnl
 
 	push 0
 	call exit
@@ -206,7 +190,7 @@ down2	call	return3
 return3	push r3ok
 	return return return
 
-r3ok	string Tripple return succeeded!
+r3ok	string Triple return succeeded!
 
 try2	call	mid
 	call	putstr
@@ -247,3 +231,21 @@ even	drop
 odd	drop
 	push sodd
 	jump @fineo
+
+# Exercise the half instruction
+
+tryhalf	push tmpb
+	store
+	push halfof
+	call putstr
+	call putxsp
+	push is
+	call putstr
+	push tmpb
+	fetch half call
+	putx
+	call putnl
+	return
+
+halfof	string Half of 
+is	string is 
