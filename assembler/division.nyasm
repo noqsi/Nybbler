@@ -61,7 +61,8 @@ putnl	push 10
 	return
 
 # 11 bit positive divide
-# args: dividend divisor
+# args: dividend divisor (TOS)
+# results: quotient remainder (TOS)
 # args must not be negative
 # divisor must not be zero (infinite loop!)
 
@@ -115,7 +116,39 @@ divshift push quotient
 	swap half		# adjust divisor for next step		
 	jump @divstep
 	
-divdone drop drop return	# results are in quotient, remainder 
+divdone drop drop
+	push quotient
+	fetch push remainder
+	fetch
+	return
+
+# Put decimal, recursive approach
+# TOS is input
+
+putdec	call duplicate
+	push
+	0x800
+	and snz drop	# test sign bit, skip for negative
+	jump @putpdec
+	push 0x2D	# "-"
+	call putc	# and fall through
+
+# Entry point for known nonnegative
+
+putpdec	push 10
+	call pdiv
+	swap snz	# quotient to TOS, will be dividend unless 0
+	drop jump @putdigit	# don't need the final quotient (0)
+	call putpdec	# recursively get more significant digit
+putdigit push 0x30	# "0"
+	add		# convert to ASCII
+	call putc
+	return
+
+putdecsp call putdec
+	push 0x20
+	call putc
+	return
 
 # Fibonacci numbers
 
@@ -135,24 +168,22 @@ absfib	call fib
 	call abs
 	return
 
-start	push 0
+
+start	push 0		# will loop 4096 times before it hits 0 and stops
 
 loop	call absfib	# dividend
 	call duplicate
-	call putxsp
+	call putdecsp
 	call absfib	# divisor
 	call absfib	# and kills some bits, making it smaller
 	and snz
 	push 1		# don't divide by zero
 	call duplicate
-	call putxsp
+	call putdecsp
 	call pdiv
-	push quotient
-	fetch
-	call putxsp
-	push remainder
-	fetch
-	call putx
+	swap		# print quotient first
+	call putdecsp	# quotient
+	call putdec		# remainder
 	call putnl
 	neg not snz
 	jump @done
@@ -160,4 +191,5 @@ loop	call absfib	# dividend
 	
 done	push 0
 	call exit
+	
 	
