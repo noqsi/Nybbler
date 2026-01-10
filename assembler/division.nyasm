@@ -23,15 +23,16 @@ duplicate push tmpa
 double	call duplicate
 	add return
 
-# Absolute value
-# Restriction: it can't take the absolute value of -2048 (returned unchanged)
+# Absolute value (one's complement)
+# Always returns positive at the cost of rounding by 1
+# toward 0 for negative input
 
-abs	call duplicate
+abs1	call duplicate
 	push 
 	0x800
 	and snz drop
 	return
-	neg return
+	not return
 	
 # Host calls use jump -1, host detects this, compares pc to symbols
 # to figure out which call. Args on stack. Guest is responsible for stack
@@ -172,9 +173,7 @@ fib	push	fn1
 	store return	
 
 absfib	call fib
-	push
-	0x7ff
-	and
+	call abs1
 	return
 
 
