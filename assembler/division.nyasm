@@ -24,6 +24,7 @@ double	call duplicate
 	add return
 
 # Absolute value
+# Restriction: it can't take the absolute value of -2048 (returned unchanged)
 
 abs	call duplicate
 	push 
@@ -60,6 +61,11 @@ putnl	push 10
 	call putc
 	return
 
+trace	call duplicate
+	call putx
+	call putnl
+	return
+	
 # 11 bit positive divide
 # args: dividend divisor (TOS)
 # results: quotient remainder (TOS)
@@ -90,7 +96,8 @@ divnorm	swap call duplicate	# current unnormalized divisor
 
 divstep	call duplicate 	# copy divisor for subtraction
 	neg push remainder # prepare to subtract
-	fetch swap add	# subtract divisor from remainder
+	fetch 
+	swap add	# subtract divisor from remainder
 	call duplicate	# for test
 	push 
 	0x800		# sign bit
@@ -165,11 +172,17 @@ fib	push	fn1
 	store return	
 
 absfib	call fib
-	call abs
+	push
+	0x7ff
+	and
 	return
 
 
-start	push 0		# will loop 4096 times before it hits 0 and stops
+start	push 60	# outer loop
+outer	snz
+	jump @outdone
+			# inner loop
+	push 0		# will loop 4096 times before it hits 0 and stops
 
 loop	call absfib	# dividend
 	call duplicate
@@ -177,7 +190,7 @@ loop	call absfib	# dividend
 	call absfib	# divisor
 	call absfib	# and kills some bits, making it smaller
 	and snz
-	push 1		# don't divide by zero
+	drop push 1		# don't divide by zero
 	call duplicate
 	call putdecsp
 	call pdiv
@@ -186,10 +199,15 @@ loop	call absfib	# dividend
 	call putdec		# remainder
 	call putnl
 	neg not snz
-	jump @done
+	jump @indone	# exit inner loop
 	jump @loop
+indone	drop neg not	# drop inner count, dec outer count
+	call duplicate	# reseed fib gen from loop count
+	push fn
+	store drop
+	jump @outer
 	
-done	push 0
+outdone	drop push 0	# drop loop count for tidiness
 	call exit
 	
 	
