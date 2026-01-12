@@ -31,3 +31,10 @@ division.nyobj : division.nyasm nyasm.awk
 
 divcheck : division.nyobj divcheck.awk
 	sudo ../host/nyrun <division.nyobj | gawk -f divcheck.awk
+
+count : count.nyobj
+	sudo ../host/nyrun <count.nyobj 
+
+count.nyobj : count.nyasm nyasm.awk
+	./nyasm.sh count.nyasm >count.nyobj
+

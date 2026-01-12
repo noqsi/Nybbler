@@ -1,0 +1,196 @@
+# Handy temporaries at low addresses
+
+tmpa	data	0
+tmpb	data	0
+
+# Variables for division, also must be at low addresses
+
+remainder data 0
+quotient data 0
+
+# Handy short ops, callable with two nybbles
+
+# duplicate pushes a duplicate of the TOS
+# uses tmpa
+
+duplicate push tmpa
+	store push tmpa
+	fetch return
+
+# double multiplies the TOS by 2
+# uses duplicate and thus tmpa
+
+double	call duplicate
+	add return
+
+# Absolute value (one's complement)
+# Always returns positive at the cost of rounding by 1
+# toward 0 for negative input
+
+abs1	call duplicate
+	push 
+	0x800
+	and snz drop
+	return
+	not return
+	
+# Host calls use jump -1, host detects this, compares pc to symbols
+# to figure out which call. Args on stack. Guest is responsible for stack
+# manipulation, host only reads or modifies values, not stack pointer.	
+# put byte
+	nop	# Avoid race where PC is putc
+putc	jump	-1
+	drop return
+
+# put word as hexadecimal
+
+putx	jump	-1
+	drop return
+
+putxsp	call putx
+	push 0x20
+	call putc
+	return
+
+# return TOS as exit code
+
+exit	jump	-1
+
+# output newline
+
+putnl	push 10
+	call putc
+	return
+
+trace	call duplicate
+	call putx
+	call putnl
+	return
+	
+# 11 bit positive divide
+# args: dividend divisor (TOS)
+# results: quotient remainder (TOS)
+# args must not be negative
+# divisor must not be zero (infinite loop!)
+
+pdiv	swap push remainder # in the beginning, the dividend is the remainder
+	store drop
+	push 1		# initial count of potential quotient bits
+divnorm	swap call duplicate	# current unnormalized divisor
+	push
+	0x400		# test msb
+	and 
+	snz snz snz	# skip over three words if divisor normalized
+ 	drop call double # drop test bit, double divisor
+	swap not neg	# increment bit count
+	jump @divnorm
+
+# at this point, the TOS is useless 0x400. The normalized divisor, and the
+# count of potential quotient bits is below that. 
+
+	drop push 0
+	push quotient
+	store drop	# initialize quotient
+	
+# Loop comparing the divisor
+# to the remainder, halving the divisor each time
+
+divstep	call duplicate 	# copy divisor for subtraction
+	neg push remainder # prepare to subtract
+	fetch 
+	swap add	# subtract divisor from remainder
+	call duplicate	# for test
+	push 
+	0x800		# sign bit
+	and snz drop	# if negative, quotient bit is zero
+	jump @div1	# we have a one bit
+
+# The adjusted remainder in the TOS is wrong, so just drop
+# it and leave the remainder in memory alone.
+
+	drop push 0		# result bit
+	jump @divshift
+
+div1	push remainder	# save adjusted remainder
+	store drop
+	push 1		# result bit
+	
+divshift push quotient
+	fetch call double	# double the quotient
+	add push quotient	# add in the bit
+	store drop swap		# save it, count to TOS
+	neg not snz		# decrement count
+	jump @divdone
+	swap half		# adjust divisor for next step		
+	jump @divstep
+	
+divdone drop drop
+	push quotient
+	fetch push remainder
+	fetch
+	return
+
+# Put decimal, recursive approach
+# TOS is input
+
+putdec	call duplicate
+	push
+	0x800
+	and snz drop	# test sign bit, skip for negative
+	jump @putpdec
+	push 0x2D	# "-"
+	call putc	
+	neg		# and fall through
+			# understanding why this works ok for the corner
+			# case of -2048 is left for you to cogitate
+			# upon.
+
+# Entry point for known nonnegative
+
+putpdec	push 10
+	call pdiv
+	swap snz	# quotient to TOS, will be dividend unless 0
+	drop jump @putdigit	# don't need the final quotient (0)
+	call putpdec	# recursively get more significant digit
+putdigit push 0x30	# "0"
+	add		# convert to ASCII
+	call putc
+	return
+
+putdecsp call putdec
+	push 0x20
+	call putc
+	return
+
+# Fibonacci numbers
+
+fn1	data	1
+fn	data	1
+
+fib	push	fn1
+	fetch
+	push fn
+	fetch
+	push fn1
+	store add
+	push fn
+	store return	
+
+absfib	call fib
+	call abs1
+	return
+
+
+start	push 0		# will loop 4096 times before it hits 0 and stops
+
+loop	call duplicate
+	call putdec
+	call putnl
+	not neg snz
+	jump @done
+	jump @loop
+	
+done	drop push 0	# drop loop count for tidiness
+	call exit
+	
+	
