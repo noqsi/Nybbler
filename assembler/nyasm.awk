@@ -39,8 +39,24 @@ function evaluate( expr, first ) {
 	return 0
 }
 
-function maskarg( arg, nybble, modulus ) {
-	modulus = 16^(3-nybble)
+function maskarg( arg, nybble, lastop, modulus, minarg, maxarg ) {
+
+	modulus = 16^(nybbles-nybble)
+	if( pass == 2 ) {
+		if( lastop == "jump" ) {	# arg is signed
+			minarg = -modulus/2
+			maxarg = modulus/2-1
+		} else {			# arg is unsigned
+			minarg = 0
+			maxarg = modulus-1
+		}
+		if( arg < minarg || arg > maxarg ) {
+			print "Argument out of range on line", FNR,
+				$0 >"/dev/stderr"
+			exit( 1 )
+		}
+	}	
+
 	return ( arg % modulus + modulus ) % modulus
 }
 
@@ -114,11 +130,14 @@ $2=="string"{
 	inst = 0
 	for( i=0; i<nybbles; ++i ){
 		token = $(i+2)
-		if( token in opcode ) inst = inst * 16 + opcode[ token]
+		if( token in opcode ) {
+			inst = inst * 16 + opcode[ token]
+			lastop = token
+		}
 		else if( length(token) == 0 ) break
 		else if( token ~ /#/ ) break
 		else{
-			inst = inst * 16^(3-i) + maskarg( evaluate( token ), i )
+			inst = inst * 16^(3-i) + maskarg( evaluate( token ), i, lastop )
 			break
 		}
 	}
