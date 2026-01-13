@@ -13,6 +13,10 @@
 #define NYSTART 64
 #define NYHALT  128
 
+// Status bit, poll register 0
+
+#define RUNNING 0x1
+
 // Memory segments
 
 #define NYDATA 0x1000

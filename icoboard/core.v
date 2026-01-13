@@ -203,12 +203,15 @@ module core (
 	
 	
 // START/HALT logic
+// Either halt_request or an instruction of 0xfff
+// halts sychronously at an instruction word boundary.
 
 	reg running, halt_request;
 	
 	always @( posedge( clk ))
 		if( start ) running <= 1;
-		else if( halt_request && cycle == last ) running <= 0;
+		else if( ( halt_request || & instruction_word ) && 
+			cycle == last ) running <= 0;
 	
 	always @( posedge( clk ))
 		if( halt ) halt_request <= 1;	  
@@ -400,8 +403,14 @@ module core (
 
 	wire execute = cycle == xeq1 || cycle == xeq2 || cycle == xeq3;	
 	
-//	assign status = {8'b0, cycle == 0, cycle == 1, cycle == 2, cycle == 3, cycle == 4, cycle == 5, cycle == 6, running};
+// For the nonce, the only status the host can see is running
 
+	assign status = {15'b0, running};
+
+// debug stuff
+	
+//	assign status = {8'b0, cycle == 0, cycle == 1, cycle == 2, cycle == 3, cycle == 4, cycle == 5, cycle == 6, running};
+/*
 	reg [15:0] toggles;
 	
 	always @( posedge( clk )) begin
@@ -414,4 +423,5 @@ module core (
 		end
 		
 	assign status = toggles;
+*/
 endmodule

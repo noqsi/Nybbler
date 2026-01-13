@@ -34,11 +34,13 @@ abs1	call duplicate
 	return
 	not return
 	
-# Host calls use jump -1, host detects this, compares pc to symbols
+# Host calls use jump -1, which halts the processor.
+# Host detects this, compares PC to symbols
 # to figure out which call. Args on stack. Guest is responsible for stack
-# manipulation, host only reads or modifies values, not stack pointer.	
+# manipulation, host only reads or modifies values, not stack pointer.
+	
 # put byte
-	nop	# Avoid race where PC is putc
+
 putc	jump	-1
 	drop return
 

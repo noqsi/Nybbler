@@ -71,6 +71,9 @@ int main( int argc, char **argv ) {
 	ny_put( 1, NYSTART );
 	
 	for(;;) {	// poll for host requests
+	
+		if( ny_poll( 0 ) & RUNNING ) continue;
+		
 		address = ny_peek( NYREGS, PC );
 		
 		if( address == host_putc ) {
