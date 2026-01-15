@@ -1,0 +1,18 @@
+start	push 11
+	times
+		call duplicate
+		call putdec
+		call putnl
+		push
+		1500
+		times
+			push
+			1000
+			times
+			repeat
+		repeat
+	repeat
+	
+	push 0
+	call exit
+

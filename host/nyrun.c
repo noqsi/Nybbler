@@ -92,5 +92,12 @@ int main( int argc, char **argv ) {
 			ny_put( 1, NYHALT );
 			exit( ny_peek( NYREGS, TOS ));
 		}
+
+// This doesn't work: the RUNNING bit is a bit glitchy.
+
+//		else if( ( ny_poll( 0 ) & RUNNING ) == 0 ) {
+//			fprintf( stderr, "Halted at %03X", address );
+//			exit( 1 );
+//		}
 	}
 }

@@ -38,3 +38,11 @@ count : count.nyobj
 count.nyobj : count.nyasm utils.nyasm nyasm.awk
 	./nyasm.sh utils.nyasm count.nyasm >count.nyobj
 
+countdown.nyasm : countdown.nysa nysa
+	./nysa countdown.nysa >countdown.nyasm
+
+countdown.nyobj : countdown.nyasm utils.nyasm nyasm.awk
+	./nyasm.sh utils.nyasm countdown.nyasm >countdown.nyobj
+
+countdown : countdown.nyobj
+	sudo ../host/nyrun <countdown.nyobj 
