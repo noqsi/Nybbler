@@ -38,7 +38,7 @@ count : count.nyobj
 count.nyobj : count.nyasm utils.nyasm nyasm.awk
 	./nyasm.sh utils.nyasm count.nyasm >count.nyobj
 
-countdown.nyasm : countdown.nysa nysa
+countdown.nyasm : countdown.nysa nysa nysa.awk
 	./nysa countdown.nysa >countdown.nyasm
 
 countdown.nyobj : countdown.nyasm utils.nyasm nyasm.awk
