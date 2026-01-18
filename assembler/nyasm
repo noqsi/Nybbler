@@ -1,0 +1,5 @@
+#!/bin/bash
+
+: ${AWKDIR:=${NYBBLEDIR:=~/Nybbler}/awk}
+
+gawk -f ${AWKDIR}/nyasm.awk $* | gawk -f ${AWKDIR}/nyasm.awk - $*

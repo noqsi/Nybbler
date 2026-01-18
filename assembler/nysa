@@ -1,3 +1,5 @@
 #!/bin/bash
 
-gawk -f nysa.awk $* 
+: ${AWKDIR:=${NYBBLEDIR:=~/Nybbler}/awk}
+
+gawk -f ${AWKDIR}/nysa.awk $* 
