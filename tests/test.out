@@ -1,0 +1,38 @@
+Hello World!
+Let's count:
+001 002 003 004 005 006 007 008 009 00A 00B 00C 00D 00E 00F 010 011 012 013 014 
+Fibonacci numbers mod 2^12:
+002 003 005 008 00D 015 022 037 059 090 0E9 179 262 3DB 63D A18 055 A6D AC2 52F 
+Double return succeeded!
+Triple return succeeded!
+000 is zero
+FF1 is negative
+520 is even
+Half of 511 is 288
+A31 is negative
+0BD is odd
+Half of 973 is CB9
+8B5 is negative
+228 is even
+Half of ADD is D6E
+D05 is negative
+7E2 is even
+Half of 4E7 is 273
+CC9 is negative
+1B0 is even
+Half of E79 is F3C
+029 is positive
+15D is odd
+Half of ECB is F65
+D6D is negative
+3C7 is odd
+Half of 9A5 is CD2
+5DD is positive
+07D is odd
+Half of 55F is 2AF
+4E1 is positive
+5BF is odd
+Half of F21 is F90
+961 is negative
+77D is odd
+Half of 1E3 is 0F1

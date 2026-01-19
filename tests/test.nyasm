@@ -3,6 +3,13 @@
 tmpa	data	0
 tmpb	data	0
 
+# duplicate pushes a duplicate of the TOS
+# uses tmpa
+
+duplicate push tmpa
+	store push tmpa
+	fetch return
+
 # Host calls use jump -1, host detects this, compares pc to symbols
 # to figure out which call. Args on stack. Guest is responsible for stack
 # manipulation, host only reads or modifies values, not stack pointer.	
@@ -41,6 +48,17 @@ lputstr	snz		# test for zero
 	neg not 	# decrement count
 	jump @lputstr
 eputstr drop return
+
+# Absolute value (one's complement)
+# Always returns positive at the cost of adjusting by 1
+# toward 0 for negative input
+
+abs1	call duplicate
+	push 
+	0x800
+	and snz drop
+	return
+	not return
 
 hello	string	Hello World!
 
@@ -96,6 +114,7 @@ fcloop	snz
 	call	fib
 	call	classify
 	call	fib
+	call	abs1
 	call	evenodd
 	call	fib
 	call	tryhalf
