@@ -32,4 +32,5 @@ divcheck : division.nyobj divcheck.awk
 	$(NYRUN) <division.nyobj | gawk -f divcheck.awk
 	@echo "test OK"
 
-clean : rm -f *.nyobj *.pdf *.ps
+clean : 
+	rm -f *.nyobj *.pdf *.ps
