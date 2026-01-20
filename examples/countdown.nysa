@@ -1,3 +1,6 @@
+# Count down seconds
+# Needs basics in low memory
+
 main	push cdown
 	call putstr
 	call putnl
@@ -8,11 +11,11 @@ main	push cdown
 		call putdec
 		call putnl
 		push
-		1500
+		1000
 		times
-			push
-			1000
-			times
+			push	# times loop overhead is 17 40 ns cycles
+			1470 	# or 680 ns. 1470 iterations is almost
+			times	# exactly 1 ms.
 			repeat
 		repeat
 	repeat

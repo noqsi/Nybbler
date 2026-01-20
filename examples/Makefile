@@ -10,6 +10,9 @@ export AWKDIR=../assembler
 %.nyobj : %.nyasm
 	$(NYASM) $< >$@
 
+# note that basics must go first here to wind up in low memory
+# where the functions and variables belong
+
 %.nyasm : %.nysa
 	$(NYSA) basics.nysa $< >$@
 
