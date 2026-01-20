@@ -55,7 +55,7 @@ int main( int argc, char **argv ) {
 				host_getc = value;
 			else if( strcmp( symbol, "exit" ) == 0 )
 				host_exit = value;
-			else if( strcmp( symbol, "start" ) == 0 )
+			else if( strcmp( symbol, "$start" ) == 0 )
 				start_addr = value;
 			else if( strcmp( symbol, "putx" ) == 0 )
 				host_putx = value;

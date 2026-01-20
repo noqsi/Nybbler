@@ -89,7 +89,7 @@ $2=="ifnot" {
 $2=="else" {
 	print "# " $0
 	blocktype[blocknest] = "else"
-	print "	jump	@endif$" blockid
+	print "	jump	@$" blockid ".endif"
 	print "$" ifblock[ifnest] ".else	=	."
 	next
 }
@@ -99,7 +99,7 @@ $2=="endif" {
 	if( blocktype[blocknest] == "if") # pretend this is the else clause
 		print "$" ifblock[ifnest] ".else	=	."
 	else if( blocktype[blocknest] == "else")
-		print "$" ifblock[ifnest], ".endif	=	."
+		print "$" ifblock[ifnest] ".endif	=	."
 	else call nesterror( )
 	--ifnest
 	--blocknest

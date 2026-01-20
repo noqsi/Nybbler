@@ -1,0 +1,187 @@
+# Handy temporaries at low addresses
+
+tmpa	data	0
+tmpb	data	0
+
+# Variables for division, also must be at low addresses
+
+remainder data 0
+quotient data 0
+
+# Handy short ops, callable with two nybbles
+
+# duplicate pushes a duplicate of the TOS
+# uses tmpa
+
+duplicate push tmpa
+	store push tmpa
+	fetch return
+
+# double multiplies the TOS by 2
+# uses duplicate and thus tmpa
+
+double	call duplicate
+	add return
+
+# Absolute value
+# Restriction: yields -2048 for an input of -2048 (overflow)
+
+abs	call duplicate
+	push 
+	0x800
+	and snz drop
+	return
+	neg return
+	
+# Host calls use jump -1, which halts the processor.
+# Host detects this, compares PC to symbols
+# to figure out which call. Args on stack. Guest is responsible for stack
+# manipulation, host only reads or modifies values, not stack pointer.
+	
+# put byte
+
+putc	jump	-1
+	drop return
+
+# put word as hexadecimal
+
+putx	jump	-1
+	drop return
+
+putxsp	call putx
+	push 0x20
+	call putc
+	return
+
+$start	push 0		# default exit code
+	call		# use a long call 'cause we don't know where main is
+	main		# fall through to exit on return
+
+# return TOS as exit code
+
+exit	jump	-1
+
+# output newline
+
+putnl	push 10
+	call putc
+	return
+
+# put TOS nondestructively
+
+trace	call duplicate
+	call putx
+	call putnl
+	return
+	
+# 11 bit positive divide
+# args: dividend divisor (TOS)
+# results: quotient remainder (TOS)
+# args must not be negative
+# divisor must not be zero (infinite loop!)
+
+pdiv	swap push remainder # in the beginning, the dividend is the remainder
+	store drop
+	push 1		# initial count of potential quotient bits
+	do
+		swap call duplicate	# current unnormalized divisor
+		push
+		0x400		# test msb
+		and
+		if
+			break	# break if divisor normalized
+		endif 
+	 	call double 	# double divisor
+		swap not neg	# increment bit count
+	repeat
+
+# at this point, the TOS is the normalized divisor, and the
+# count of potential quotient bits is below that. 
+
+	push 0
+	push quotient
+	store drop swap	# initialize quotient, put bit count on top
+	
+# Loop comparing the divisor
+# to the remainder, halving the divisor each time
+
+	times
+		swap call duplicate 	# copy divisor for subtraction
+		neg push remainder # prepare to subtract
+		fetch 
+		swap add	# subtract divisor from remainder
+		call duplicate	# for test
+		push 
+		0x800		# sign bit
+		and	# if true, quotient bit is zero
+		if
+
+# The adjusted remainder in the TOS is wrong, so just drop
+# it and leave the remainder in memory alone.
+
+			drop push 0		# result bit
+		else
+
+			push remainder	# save adjusted remainder
+			store drop
+			push 1		# result bit
+		endif
+		push quotient
+		fetch call double	# double the quotient
+		add push quotient	# add in the bit
+		store drop half		# save it, adjust divisor for next step
+		swap			# count to TOS
+	repeat
+	
+	drop push quotient		# drop the divisor
+	fetch push remainder		# return results
+	fetch return			# on stack
+
+# Put decimal, recursive approach
+# TOS is input
+
+putdec	call duplicate
+	push
+	0x800
+	and 	# test sign bit
+	if	
+		push 0x2D	# "-"
+		call putc	
+		neg	# and fall through
+			# understanding why this works ok for the corner
+			# case of -2048 is left for you to cogitate
+			# upon.
+	endif
+
+# Entry point for known nonnegative
+
+putpdec	push 10
+	call pdiv
+	swap snz	# quotient to TOS, will be dividend unless 0
+	drop jump 1	# don't need the final quotient, skip over call
+	call putpdec	# recursively get more significant digit
+	push 0x30	# "0"
+	add		# convert to ASCII
+	call putc
+	return
+
+putdecsp call putdec
+	push 0x20
+	call putc
+	return
+
+	
+# Output a counted string
+# Takes pointer to string on TOS
+# Uses tmpa
+
+putstr	push tmpa
+	store fetch	# save address, get count
+	times
+		push tmpa
+		fetch not neg	# fetch and increment address
+		push tmpa
+		store fetch	# save address, fetch char
+		call putc
+	repeat
+	return

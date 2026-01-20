@@ -1,4 +1,8 @@
-start	push 11
+main	push cdown
+	call putstr
+	call putnl
+	
+	push 11
 	times
 		call duplicate
 		call putdec
@@ -13,6 +17,11 @@ start	push 11
 		repeat
 	repeat
 	
-	push 0
-	call exit
-
+	push blast
+	call putstr
+	call putnl
+	
+	return
+	
+cdown	string Countdown:
+blast	string Blastoff!
