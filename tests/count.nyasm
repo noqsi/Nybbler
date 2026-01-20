@@ -1,6 +1,6 @@
 # needs utils
 
-start	push 0		# will loop 4096 times before it hits 0 and stops
+$start	push 0		# will loop 4096 times before it hits 0 and stops
 
 loop	call duplicate
 	call putdec

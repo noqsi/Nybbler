@@ -62,7 +62,7 @@ abs1	call duplicate
 
 hello	string	Hello World!
 
-start	push hello
+$start	push hello
 	call putstr
 	call putnl
 

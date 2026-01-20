@@ -177,7 +177,7 @@ absfib	call fib
 	return
 
 
-start	push 12	# outer loop
+$start	push 12	# outer loop
 outer	snz
 	jump @outdone
 			# inner loop
