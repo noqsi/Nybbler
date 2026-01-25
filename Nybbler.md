@@ -1,3 +1,4 @@
+# Nybbler Nanocomputer
 ## Features
 * Simple, minimalist instruction set.
 * Word-oriented: data, address, and instruction words are all the same size.
@@ -13,13 +14,15 @@ Data encoding is modular two's complement binary.  Jump offsets embedded within 
 
 ## Memory model
 
-Memory is addressed as words of the implementation's fixed size. Minimal implementations share memory between instructions and data, although an enhanced implementation may separate them.
+Memory is addressed as words of the implementation's fixed size. Either Von Neumann (shared instruction and data memory) or Harvard (separate instruction and data memories) are possible.
 
 ## Instruction Encoding
 
+The program counter (PC) points to a location in program memory, where the next instruction word (or, in some cases, the current instruction's operand) is located. The PC may be altered by the **snz**, **jump**, **call**, or **return** instructions. If none of those is part of the instruction word, the PC will increment by one following exection of the word.
+
 Instructions are encoded as four bits (nybbles), packed into instruction word. When an instruction word is executed, all instructions in the word are executed in sequence.
 
-*Long* instructions take the remaining nybbles of the instruction word as an operand. If the long instruction is in the last nybble of an instruction word, the word at the location the PC points to is taken as its operand. This is commonly the word following the instruction word. However, if the instruction word contains instruction(s) that modify the PC (**return** or **snz**), that modified PC will supply the address of the operand.
+*Long* instructions take the remaining nybbles of the instruction word as an operand. If the long instruction is in the last nybble of an instruction word, the word at the location the PC points to is taken as its operand. This is commonly the word following the instruction word. However, if the instruction word contains short instruction(s) that modify the PC (**return** or **snz**), that modified PC will supply the address of the operand.
  
 ## Opcodes
 Hex | ASM | S/L | Summary
