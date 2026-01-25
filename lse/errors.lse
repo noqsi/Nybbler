@@ -1,7 +1,0 @@
-# Error messages
-
-msg : " unknown"
-msg : 1 case " Not yet known"
-
-# n error yields nothing (and aborts)
-error : error( " Error " ,t msg swap , "  " ,t ,t )error abort
