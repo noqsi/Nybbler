@@ -120,3 +120,11 @@ looptop		# some
 **push**,
 **extend**,
 **jump**
+
+### Using the assembler
+
+**nyasm** *file.nyasm* ... >output.nyobj
+
+This assembles an object file from a list of assembly language source files. The source files are assembled in order, so (barring explict setting of the location counters), code that needs to be in low addresses should be in earlier files in the list. There is no linker: the output file is loadable into a nybbler using a tool such as **nyrun**.
+
+The output file is a text file that includes all of the input code as well as the contents of the resulting symbol table. It can serve as a printable listing.
