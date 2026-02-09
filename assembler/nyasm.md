@@ -127,4 +127,12 @@ looptop		# some
 
 This assembles an object file from a list of assembly language source files. The source files are assembled in order, so (barring explict setting of the location counters), code that needs to be in low addresses should be in earlier files in the list. There is no linker: the output file is loadable into a nybbler using a tool such as **nyrun**.
 
+
+### Assembly Output (.nyobj format)
+
 The output file is a text file that includes all of the input code as well as the contents of the resulting symbol table. It can serve as a printable listing.
+
+Data and code to be loaded into memory are represented one word per line. Lines that don't match the format are ignored. Text appended to lines that match the format is also ignored.
+
+Fields are separated by whitespace. For data, the first field is the character "D". For an instruction, the first field is the character "I". The next field is a hexadecimal address. The word to be loaded into that address follows in hexadecimal.
+
