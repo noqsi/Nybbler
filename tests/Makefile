@@ -1,7 +1,7 @@
 # Use the development assembler and host driver
 
 NYASM=../assembler/nyasm
-NYRUN=sudo ../host/nyrun
+NYRUN=../host/nyrun
 
 # For benefit of the assembler
 export AWKDIR=../assembler
@@ -21,18 +21,18 @@ check : test countcheck divcheck
 # Only need to make this if you change test.nyasm
 
 test.out : test.nyobj
-	$(NYRUN) <test.nyobj >test.out
+	$(NYRUN) test.nyobj >test.out
 
 test : test.nyobj
-	$(NYRUN) <test.nyobj | diff - test.out
+	$(NYRUN) test.nyobj | diff - test.out
 	@echo "test OK"
 
 countcheck : count.nyobj countcheck.awk
-	$(NYRUN) <count.nyobj | gawk -f countcheck.awk
+	$(NYRUN) count.nyobj | gawk -f countcheck.awk
 	
 divcheck : division.nyobj divcheck.awk
 	@echo "This should take a minute or so:"
-	$(NYRUN) <division.nyobj | gawk -f divcheck.awk
+	$(NYRUN) division.nyobj | gawk -f divcheck.awk
 	@echo "test OK"
 
 clean : 

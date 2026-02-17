@@ -2,7 +2,7 @@
 
 NYASM=../assembler/nyasm
 NYSA=../assembler/nysa
-NYRUN=sudo ../host/nyrun
+NYRUN=../host/nyrun
 
 # For benefit of the assembler
 export AWKDIR=../assembler
@@ -24,7 +24,7 @@ export AWKDIR=../assembler
 .PHONY : countdown clean
 
 countdown : countdown.nyobj
-	$(NYRUN) <countdown.nyobj
+	$(NYRUN) countdown.nyobj
 
 clean : 
 	rm -f *.nyasm *.nyobj *.pdf *.ps
