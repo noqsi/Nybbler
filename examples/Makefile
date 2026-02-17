@@ -13,7 +13,7 @@ export AWKDIR=../assembler
 # note that basics must go first here to wind up in low memory
 # where the functions and variables belong
 
-%.nyasm : %.nysa
+%.nyasm : %.nysa basics.nysa
 	$(NYSA) basics.nysa $< >$@
 
 %.pdf : %
@@ -21,10 +21,13 @@ export AWKDIR=../assembler
 	ps2pdf $<.ps
 	rm $<.ps
 
-.PHONY : countdown clean
+.PHONY : shout countdown clean
 
 countdown : countdown.nyobj
 	$(NYRUN) countdown.nyobj
+
+shout : shout.nyobj
+	$(NYRUN) shout.nyobj
 
 clean : 
 	rm -f *.nyasm *.nyobj *.pdf *.ps

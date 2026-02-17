@@ -43,6 +43,11 @@ abs	call duplicate
 putc	jump	-1
 	drop return
 
+# get byte
+getc	push 0		# make space on stack
+	jump -1
+	return
+
 # put word as hexadecimal
 
 putx	jump	-1

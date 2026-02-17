@@ -1,0 +1,35 @@
+# convert input to upper case
+# needs basics
+
+main	do
+		call getc
+		call duplicate
+		not neg		# adds one, makes zero for EOF
+		ifnot
+			drop return
+		endif
+		
+		call duplicate
+		push 0x61	# letter "a"
+		neg add
+		push
+		0x800		# sign bit
+		and
+		ifnot		# "a" or greater
+		
+			call duplicate
+			push 0x7b	# letter "z" plus one
+			neg add
+			push 
+			0x800
+			and
+			if		# z or less
+				push 0x20	# difference between UC, LC
+				neg add
+			endif
+		endif
+		
+		call putc
+	repeat
+				
+		
