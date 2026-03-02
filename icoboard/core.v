@@ -52,7 +52,7 @@ module core (
 		endcase
 	
 	parameter i_nop = 0 ;
-	parameter i_half = 1 ;
+	parameter i_shift = 1 ;
 	parameter i_neg = 2 ;
 	parameter i_not = 3 ;
 	parameter i_return = 4 ;
@@ -306,7 +306,7 @@ module core (
 
 		i_not : TOS <= ~TOS;
 
-		i_half : TOS <= { TOS[11], TOS[11:1] };
+		i_shift : TOS <= { 0, TOS[11:1] };
 
 		i_add : TOS <= TOS + number_out;
 
