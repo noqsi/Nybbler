@@ -306,7 +306,7 @@ module core (
 
 		i_not : TOS <= ~TOS;
 
-		i_shift : TOS <= { 0, TOS[11:1] };
+		i_shift : TOS <= { 1'b0, TOS[11:1] };
 
 		i_add : TOS <= TOS + number_out;
 
