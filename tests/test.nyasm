@@ -117,7 +117,7 @@ fcloop	snz
 	call	abs1
 	call	evenodd
 	call	fib
-	call	tryhalf
+	call	tryshift
 	neg not
 	jump	@fcloop
 fcend	drop
@@ -251,9 +251,9 @@ odd	drop
 	push sodd
 	jump @fineo
 
-# Exercise the half instruction
+# Exercise the shift instruction
 
-tryhalf	push tmpb
+tryshift	push tmpb
 	store
 	push halfof
 	call putstr
@@ -261,7 +261,7 @@ tryhalf	push tmpb
 	push is
 	call putstr
 	push tmpb
-	fetch half call
+	fetch shift call
 	putx
 	call putnl
 	return

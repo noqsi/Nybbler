@@ -91,6 +91,7 @@ int main( int argc, char **argv ) {
 	for(;;) {	// poll for host requests
 	
 		if( ny_poll( 0 ) & RUNNING ) continue;
+		if( ny_poll( 0 ) & RUNNING ) continue;	// racy, check twice
 		
 		address = ny_peek( NYREGS, PC );
 		

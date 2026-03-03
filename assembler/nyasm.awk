@@ -1,7 +1,7 @@
 BEGIN{
 	nybbles=3
 	opcode["nop"]=0
-	opcode["half"]=1
+	opcode["shift"]=1
 	opcode["neg"]=2
 	opcode["not"]=3
 	opcode["return"]=4

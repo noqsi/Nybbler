@@ -6,8 +6,8 @@ NYRUN=../host/nyrun
 # For benefit of the assembler
 export AWKDIR=../assembler
 
-%.nyobj : %.nyasm
-	$(NYASM) $< >$@
+%.nyobj : %.nyasm utils.nyasm
+	$(NYASM) utils.nyasm $< >$@
 
 %.pdf : %
 	enscript -o $<.ps --title="Nybbler Assembly Listing" $<

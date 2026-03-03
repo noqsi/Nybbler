@@ -123,7 +123,7 @@ divshift push quotient
 	store drop swap		# save it, count to TOS
 	neg not snz		# decrement count
 	jump @divdone
-	swap half		# adjust divisor for next step		
+	swap shift		# adjust divisor for next step		
 	jump @divstep
 	
 divdone drop drop
