@@ -102,7 +102,7 @@ looptop		# some
 #### Short (one nybble)
 
 **nop**,
-**half**,
+**shift**,
 **neg**,
 **not**,
 **return**,

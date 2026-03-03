@@ -28,7 +28,7 @@ Instructions are encoded as four bits (nybbles), packed into instruction word. W
 Hex | ASM | S/L | Summary
 --------  | ---- | ------ | ----
 0 | nop	| S | No operation
-1 | half | S | Divide TOS by two
+1 | shift | S | Shift TOS right one bit
 2 | neg	| S | Negate TOS
 3 | not | S | Bitwise not
 4 | return | S | Return from function
@@ -48,8 +48,8 @@ F | jump | L | Jump to relative location
 ## Operation details
 ### nop
 This does nothing. Its principal use is to fill out unused nybbles in instruction words.
-### half
-Shift the TOS right by one. The most significant bit is unchanged. This is thus a signed divide by 2, rounded down.
+### shift
+Shift the TOS right by one. The most significant bit of thev result will be zero. This is thus an unsigned divide by 2, rounded down.
 ### neg
 Negate the TOS (twos complement).
 ### not
