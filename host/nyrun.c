@@ -91,7 +91,6 @@ int main( int argc, char **argv ) {
 	for(;;) {	// poll for host requests
 	
 		if( ny_poll( 0 ) & RUNNING ) continue;
-		if( ny_poll( 0 ) & RUNNING ) continue;	// racy, check twice
 		
 		address = ny_peek( NYREGS, PC );
 		
@@ -101,7 +100,7 @@ int main( int argc, char **argv ) {
 			ny_poke( NYREGS, PC, address + 1 ); // past the halt
 			ny_put( 1, NYSTART );
 		}
-		if( address == host_getc ) {
+		else if( address == host_getc ) {
 			ny_put( 1, NYHALT );
 			int c = getchar();
 			if( c == EOF ) c = 0xfff;	// EOF for nybbler
@@ -120,11 +119,9 @@ int main( int argc, char **argv ) {
 			exit( ny_peek( NYREGS, TOS ));
 		}
 
-// This doesn't work: the RUNNING bit is a bit glitchy.
-
-//		else if( ( ny_poll( 0 ) & RUNNING ) == 0 ) {
-//			fprintf( stderr, "Halted at %03X", address );
-//			exit( 1 );
-//		}
+		else { 
+			fprintf( stderr, "Halted at %03X\nl", address );
+			exit( 1 );
+		}
 	}
 }

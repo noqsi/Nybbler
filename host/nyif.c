@@ -107,6 +107,7 @@ uint8_t ny_poll( uint8_t rs ) {
 	set_port_mode( PI_INPUT );
 	
 	gpioWrite( PPRSEL, rs );
+	gpioDelay( 1 );				// Give the port time to select
 	return gp2bits( gpioRead_Bits_0_31() );
 }
 
