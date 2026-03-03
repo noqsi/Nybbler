@@ -134,7 +134,7 @@ pdiv	swap push remainder # in the beginning, the dividend is the remainder
 		push quotient
 		fetch call double	# double the quotient
 		add push quotient	# add in the bit
-		store drop half		# save it, adjust divisor for next step
+		store drop shift	# save it, adjust divisor for next step
 		swap			# count to TOS
 	repeat
 	
