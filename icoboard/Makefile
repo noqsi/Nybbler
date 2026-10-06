@@ -19,7 +19,7 @@ flash:
 	icoprog -f < nybbler12.bin
 
 lint:
-	verilator --lint-only nybbler12.v pi_interface.v RAM.v core.v
+	verilator --lint-only -Ilint nybbler12.v pi_interface.v RAM.v core.v
 
 .PHONY: nybbler flash clean lint
 
