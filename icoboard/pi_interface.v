@@ -7,7 +7,7 @@ module pi_interface (
         input pi_select,
         input pi_dir,
         input [7:0] byte_from_pi,
-	output [7:0] byte_to_pi,
+	output reg [7:0] byte_to_pi,
 
 // Interface to nybbler
 
