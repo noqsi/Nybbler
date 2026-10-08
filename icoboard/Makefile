@@ -1,8 +1,15 @@
+all: nybbler
+	$(MAKE) -C host
+	$(MAKE) -C tests	
+
 nybbler: nybbler12.bin
 	icoprog -p < nybbler12.bin
 
 clean:
 	rm -f nybbler12.blif nybbler12.asc nybbler12.bin 
+	$(MAKE) -C host clean
+	$(MAKE) -C tests clean
+	$(MAKE) -C examples clean
 
 nybbler12.blif: nybbler12.v pi_interface.v RAM.v core.v
 	yosys -p 'synth_ice40 -top top -blif nybbler12.blif' nybbler12.v \

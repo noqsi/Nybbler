@@ -1,10 +1,10 @@
 # Use the development assembler and host driver
 
-NYASM=../assembler/nyasm
+NYASM=../../assembler/nyasm
 NYRUN=../host/nyrun
 
 # For benefit of the assembler
-export AWKDIR=../assembler
+export AWKDIR=../../assembler
 
 %.nyobj : %.nyasm utils.nyasm
 	$(NYASM) utils.nyasm $< >$@

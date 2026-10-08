@@ -1,11 +1,11 @@
 # Use the development assembler and host driver
 
-NYASM=../assembler/nyasm
-NYSA=../assembler/nysa
+NYASM=../../assembler/nyasm
+NYSA=../../assembler/nysa
 NYRUN=../host/nyrun
 
 # For benefit of the assembler
-export AWKDIR=../assembler
+export AWKDIR=../../assembler
 
 %.nyobj : %.nyasm
 	$(NYASM) $< >$@
