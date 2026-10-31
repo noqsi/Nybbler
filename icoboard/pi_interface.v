@@ -16,9 +16,8 @@ module pi_interface (
 	output read, write, start, halt,
 	
 	input [11:0] word_to_pi,
-	input [15:0] status_to_pi,
+	input [15:0] status_to_pi
 	
-	output [7:0] debug
 );
 
 // Four registers capture the interface state
@@ -39,15 +38,6 @@ module pi_interface (
         always @(negedge clk) pi_sync <= { pi_sync[0], pi_bus_clk };
         assign pi_clk_sync = pi_sync == 2'b01;
 	
-// Debug
-
-	reg [7:0] debug_reg;
-	
-	always @( posedge clk ) 
-		if( cmd ) debug_reg <= debug_reg + 1;
-	
-	assign debug = dr;
-
 // Command decoding
 
 	wire cmd = pi_clk_sync & pi_dir & pi_select;

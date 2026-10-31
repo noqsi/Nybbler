@@ -18,7 +18,7 @@ flash:
 # Check source code for mistakes and poor practices
 
 lint:
-	verilator --lint-only -Ilint nybbler12.v pi_interface.v RAM.v core.v
+	verilator --lint-only -Ilint nybbler12.v pi_interface.v RAM.v core.v gpio.v
 
 # Test your Nybbler
 

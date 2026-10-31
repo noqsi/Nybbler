@@ -7,7 +7,15 @@ module core (
 	input [11:0] host_word_in,
 	output reg [11:0] host_word_out,
 	output [15:0] status,
-	input host_read, host_write, start, halt
+	input host_read, host_write, start, halt,
+	
+// I/O interface
+
+	output [11:0] io_addr,
+	output io_write,			
+	output [11:0] io_output,
+	input [11:0] io_input
+	
 );
 	wire [11:0] mem_addr = host_addr_in[11:0];
 	wire [3:0] mem_seg = host_addr_in[15:12];
@@ -67,6 +75,11 @@ module core (
 	parameter i_literal = 13 ;
 	parameter i_extend = 14 ;
 	parameter i_jump = 15 ;
+	
+// extended instructions
+
+	parameter ix_input = 0;
+	parameter ix_output = 1;
 	
 	wire long_inst = instruction[3:2] == 2'b11; // long instruction
 	
@@ -319,7 +332,15 @@ module core (
 		i_swap : TOS <= number_out;
 
 		i_drop : TOS <= number_out;
-
+		
+		i_extend : 
+			case( unsigned_arg )
+			
+			ix_input : TOS <= io_input;
+			
+			ix_output : TOS <= number_out;
+			
+			endcase
 		endcase
 		else if( finish_literal ) TOS <= TEMP;
 
@@ -347,6 +368,12 @@ module core (
 		
 		i_drop : SP <= SP - 1;
 		
+		i_extend :
+			case( unsigned_arg )
+			
+			ix_output : SP <= SP - 1;
+			
+			endcase
 		endcase
 	
 // Instruction cycle
@@ -402,6 +429,11 @@ module core (
 
 
 	wire execute = cycle == xeq1 || cycle == xeq2 || cycle == xeq3;	
+	
+// Output
+
+	assign io_output = number_out;
+	assign io_write = execute && instruction == i_extend && unsigned_arg == ix_output;
 	
 // For the nonce, the only status the host can see is running
 

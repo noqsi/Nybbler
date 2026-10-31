@@ -1,10 +1,10 @@
 module top (
 	input clk_100mhz,
 	output reg led1, led2, led3,
-	output pmod1_1, pmod1_2, pmod1_3, pmod1_4, pmod1_7, pmod1_8, pmod1_9, pmod1_10,
-	output pmod2_1, pmod2_2, pmod2_3, pmod2_4, pmod2_7, pmod2_8, pmod2_9, pmod2_10,
-	output pmod3_1, pmod3_2, pmod3_3, pmod3_4, pmod3_7, pmod3_8, pmod3_9, pmod3_10,
-	output pmod4_1, pmod4_2, pmod4_3, pmod4_4, pmod4_7, pmod4_8, pmod4_9, pmod4_10,
+	inout pmod1_1, pmod1_2, pmod1_3, pmod1_4, pmod1_7, pmod1_8, pmod1_9, pmod1_10,
+	inout pmod2_1, pmod2_2, pmod2_3, pmod2_4, pmod2_7, pmod2_8, pmod2_9, pmod2_10,
+	inout pmod3_1, pmod3_2, pmod3_3, pmod3_4, pmod3_7, pmod3_8, pmod3_9, pmod3_10,
+	inout pmod4_1, pmod4_2, pmod4_3, pmod4_4, pmod4_7, pmod4_8, pmod4_9, pmod4_10,
 	input pi_clk, 
 	input pi_select,
 	input pi_dir,
@@ -54,6 +54,8 @@ module top (
 
 	wire [7:0] byte_from_pi;
 	reg [7:0] byte_to_pi;
+
+	/* verilator lint_off PINMISSING */
 	
 	SB_IO #(
                 .PIN_TYPE(6'b 1010_01),
@@ -65,6 +67,7 @@ module top (
                 .D_OUT_0(byte_to_pi),
                 .D_IN_0(byte_from_pi)
         );
+	/* verilator lint_on PINMISSING */
 	
 // Interface between the byte-oriented Pi world and the word-oriented
 // nybbler world.
@@ -89,8 +92,7 @@ module top (
 		.start( start ),
 		.halt( halt ),
 		.word_to_pi( nybbler_to_pi ),
-		.status_to_pi( nybbler_status ),
-		.debug( front_left_leds )
+		.status_to_pi( nybbler_status )
 	);
 
 // Nybbler core
@@ -104,33 +106,83 @@ module top (
 		.host_write( write ),
 		.start( start ),
 		.halt( halt ),
-		.status( nybbler_status )
+		.status( nybbler_status ),
+		.io_addr( io_addr ),
+		.io_write( io_write ),
+		.io_output( io_output ),
+		.io_input( io_input )
 	);
 
 
-// Monitor LED assignments
+// I/O
 
-	assign {back_left_leds, back_right_leds} = unified_addr;
-	assign front_right_leds = nybbler_status[7:0];
+	wire [11:0] io_addr;
+	wire io_write;
+	wire [11:0] io_output;
+	logic [11:0] io_input;
 	
+	wire pmod_1_selected;
+	wire [11:0] pmod_1_data;
 
-// PMOD LEDs
-// Assume PMOD 1 is front left. Bits arranged so MSB is left
-
-wire [7:0] front_left_leds, front_right_leds, back_left_leds, back_right_leds;
-
-	assign {pmod1_10, pmod1_9, pmod1_8, pmod1_7,
-	 	pmod1_4, pmod1_3, pmod1_2, pmod1_1} = front_left_leds;
-	
-	assign {pmod2_10, pmod2_9, pmod2_8, pmod2_7,
-		pmod2_4, pmod2_3, pmod2_2, pmod2_1 } = front_right_leds;
+	gpio #( .base( 0 ) ) pmod_1 (
+		.addr( io_addr ),
+		.selected( pmod_1_selected ),
+		.write( io_write ),
+		.outbits( io_output ),
+		.muxbits( pmod_1_data ),
+		.clk( clk ),
+		.pins({pmod1_10, pmod1_9, pmod1_8, pmod1_7,
+                pmod1_4, pmod1_3, pmod1_2, pmod1_1})
+		);
 		
-	assign {pmod3_1, pmod3_2, pmod3_3, pmod3_4,
-		pmod3_7, pmod3_8, pmod3_9, pmod3_10 } = back_right_leds;
+	wire pmod_2_selected;
+	wire [11:0] pmod_2_data;
+
+	gpio #( .base( 2 ) ) pmod_2 (
+		.addr( io_addr ),
+		.selected( pmod_2_selected ),
+		.write( io_write ),
+		.outbits( io_output ),
+		.muxbits( pmod_2_data ),
+		.clk( clk ),
+		.pins({pmod2_10, pmod2_9, pmod2_8, pmod2_7,
+                pmod2_4, pmod2_3, pmod2_2, pmod2_1 })
+		);
 		
-	assign {pmod4_1, pmod4_2, pmod4_3, pmod4_4,
-		pmod4_7, pmod4_8, pmod4_9, pmod4_10 } = back_left_leds;
-	
+	wire pmod_3_selected;
+	wire [11:0] pmod_3_data;
+
+	gpio #( .base( 4 ) ) pmod_3 (
+		.addr( io_addr ),
+		.selected( pmod_3_selected ),
+		.write( io_write ),
+		.outbits( io_output ),
+		.muxbits( pmod_3_data ),
+		.clk( clk ),
+		.pins({pmod3_10, pmod3_9, pmod3_8, pmod3_7,
+                pmod3_4, pmod3_3, pmod3_2, pmod3_1})
+		);
+		
+	wire pmod_4_selected;
+	wire [11:0] pmod_4_data;
+
+	gpio #( .base( 6 ) ) pmod_4 (
+		.addr( io_addr ),
+		.selected( pmod_4_selected ),
+		.write( io_write ),
+		.outbits( io_output ),
+		.muxbits( pmod_4_data ),
+		.clk( clk ),
+		.pins({pmod4_10, pmod4_9, pmod4_8, pmod4_7,
+                pmod4_4, pmod4_3, pmod4_2, pmod4_1})
+		);
+		
+		always_comb 
+			if     ( pmod_1_selected ) io_input = pmod_1_data;
+			else if( pmod_2_selected ) io_input = pmod_2_data;
+			else if( pmod_3_selected ) io_input = pmod_3_data;
+			else if( pmod_4_selected ) io_input = pmod_4_data;
+			else io_input = 'hbad;
 		
 	
 endmodule
