@@ -119,7 +119,7 @@ module top (
 	wire [11:0] io_addr;
 	wire io_write;
 	wire [11:0] io_output;
-	logic [11:0] io_input;
+	reg [11:0] io_input;
 	
 	wire pmod_1_selected;
 	wire [11:0] pmod_1_data;
@@ -177,7 +177,8 @@ module top (
                 pmod4_4, pmod4_3, pmod4_2, pmod4_1})
 		);
 		
-		always_comb 
+		always @( pmod_1_selected or pmod_2_selected or 
+		pmod_3_selected or pmod_4_selected) 
 			if     ( pmod_1_selected ) io_input = pmod_1_data;
 			else if( pmod_2_selected ) io_input = pmod_2_data;
 			else if( pmod_3_selected ) io_input = pmod_3_data;
