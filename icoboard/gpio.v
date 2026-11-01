@@ -16,7 +16,7 @@ module gpio #(
 	reg [bits-1:0] outreg;  // using the I/O pad register causes conflicts
 	wire [bits-1:0] inbits;
 	
-	assign selected = addr == base;
+	assign selected = addr[corebits-1:1] == base[corebits-1:1];
 	
 	always @(posedge clk)
 		if( write & selected )

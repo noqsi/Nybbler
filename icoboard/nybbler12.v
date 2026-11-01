@@ -177,13 +177,13 @@ module top (
                 pmod4_4, pmod4_3, pmod4_2, pmod4_1})
 		);
 		
-		always @( pmod_1_selected or pmod_2_selected or 
-		pmod_3_selected or pmod_4_selected) 
-			if     ( pmod_1_selected ) io_input = pmod_1_data;
-			else if( pmod_2_selected ) io_input = pmod_2_data;
-			else if( pmod_3_selected ) io_input = pmod_3_data;
-			else if( pmod_4_selected ) io_input = pmod_4_data;
-			else io_input = 'hbad;
 		
+	always @( pmod_1_selected or pmod_2_selected or 
+		pmod_3_selected or pmod_4_selected) 
+		if     ( pmod_1_selected ) io_input = pmod_1_data;
+		else if( pmod_2_selected ) io_input = pmod_2_data;
+		else if( pmod_3_selected ) io_input = pmod_3_data;
+		else if( pmod_4_selected ) io_input = pmod_4_data;
+		else io_input = 'hbad;	
 	
 endmodule

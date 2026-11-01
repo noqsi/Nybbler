@@ -430,8 +430,9 @@ module core (
 
 	wire execute = cycle == xeq1 || cycle == xeq2 || cycle == xeq3;	
 	
-// Output
+// IO
 
+	assign io_addr = TOS;
 	assign io_output = number_out;
 	assign io_write = execute && instruction == i_extend && unsigned_arg == ix_output;
 	

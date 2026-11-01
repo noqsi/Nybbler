@@ -32,7 +32,7 @@ clean:
 	$(MAKE) -C tests clean
 	$(MAKE) -C examples clean
 
-nybbler12.blif: nybbler12.v pi_interface.v RAM.v core.v
+nybbler12.blif: nybbler12.v pi_interface.v RAM.v core.v gpio.v
 	yosys -p 'synth_ice40 -top top -blif nybbler12.blif' nybbler12.v \
 		pi_interface.v RAM.v core.v gpio.v
 
