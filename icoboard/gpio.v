@@ -33,7 +33,7 @@ module gpio #(
 
 	SB_IO #(
                 .PIN_TYPE(6'b 1010_01),	//  unregistered 3 state
-                .PULLUP(1'b 1)
+                .PULLUP(1'b 0)
         ) port [bits-1:0] (
                 .PACKAGE_PIN(pins),
                 .OUTPUT_ENABLE(enable),
