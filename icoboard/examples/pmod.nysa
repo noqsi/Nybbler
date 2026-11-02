@@ -1,0 +1,46 @@
+# pmod test
+
+# Takes characters from input, puts them out to PMODS in rotation.
+# For use with LED PMODs.
+# Intended for typing in raw mode, so explicitly recognizes ^D
+# as end of input.
+
+# Needs basics in low memory
+
+x_input = 0
+x_output = 1
+
+pmod_4 = 6
+pmod_4_enable = 7
+
+main	push 4
+	times
+		call duplicate
+		call duplicate
+		add not neg	# double index, add 1
+		push 0xff	# drive all bits
+		swap
+		extend x_output
+		drop		# drop the ff
+	repeat
+	
+	do
+		push 4
+		times
+			call duplicate
+			call duplicate
+			add		# double index
+			call getc
+			call duplicate
+			push 4
+			neg add		# yields zero for ^D
+			ifnot
+				drop drop drop
+				return
+			endif
+			swap extend x_output
+			drop
+		repeat
+	repeat
+		
+
