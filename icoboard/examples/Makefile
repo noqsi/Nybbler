@@ -29,5 +29,8 @@ countdown : countdown.nyobj
 shout : shout.nyobj
 	$(NYRUN) shout.nyobj
 
+pmod : pmod.nyobj
+	stty raw; $(NYRUN) pmod.nyobj; stty -raw
+	
 clean : 
 	rm -f *.nyasm *.nyobj *.pdf *.ps
