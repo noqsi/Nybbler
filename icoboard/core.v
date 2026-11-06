@@ -80,6 +80,8 @@ module core (
 
 	parameter ix_input = 0;
 	parameter ix_output = 1;
+	parameter ix_random = 2;
+	parameter ix_seed = 3;
 	
 	wire long_inst = instruction[3:2] == 2'b11; // long instruction
 	
@@ -152,7 +154,8 @@ module core (
 	wire [11:0] number_out;
         wire number_write = running 
 		? instruction == i_swap && execute 
-			|| finish_literal
+			|| finish_literal 
+			|| push_random
 		: ( host_write && (mem_seg == 3));
 	wire [7:0] number_addr = running ? SP : mem_addr[7:0];
 
@@ -340,6 +343,8 @@ module core (
 			
 			ix_output : TOS <= number_out;
 			
+			ix_random : TOS <= random_number;
+			
 			endcase
 		endcase
 		else if( finish_literal ) TOS <= TEMP;
@@ -372,6 +377,10 @@ module core (
 			case( unsigned_arg )
 			
 			ix_output : SP <= SP - 1;
+			
+			ix_random : SP <= SP + 1;
+			
+			ix_seed : SP <= SP - 1;
 			
 			endcase
 		endcase
@@ -435,6 +444,18 @@ module core (
 	assign io_addr = TOS;
 	assign io_output = number_out;
 	assign io_write = execute && instruction == i_extend && unsigned_arg == ix_output;
+
+// Pseudo-random number generation
+
+	wire [ 11 : 0 ] random_number;
+	wire push_random = execute & instruction == i_extend & unsigned_arg == ix_random;
+
+	prng randomness (
+		.seed( TOS ),
+		.reseed( execute & instruction == i_extend & unsigned_arg == ix_seed ),
+		.number( random_number ),
+		.clk( clk )
+	);
 	
 // For the nonce, the only status the host can see is running
 

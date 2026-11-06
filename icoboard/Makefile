@@ -19,7 +19,7 @@ flash:
 
 lint:
 	verilator --lint-only --default-language "1364-2005" -Ilint \
-		nybbler12.v pi_interface.v RAM.v core.v gpio.v
+		nybbler12.v pi_interface.v RAM.v core.v gpio.v prng.v
 
 # Test your Nybbler
 
@@ -34,7 +34,7 @@ clean:
 
 nybbler12.blif: nybbler12.v pi_interface.v RAM.v core.v gpio.v
 	yosys -p 'synth_ice40 -top top -blif nybbler12.blif' nybbler12.v \
-		pi_interface.v RAM.v core.v gpio.v
+		pi_interface.v RAM.v core.v gpio.v prng.v
 
 nybbler12.asc: nybbler12.blif icoboard.pcf
 	arachne-pnr -d 8k -p icoboard.pcf -o nybbler12.asc nybbler12.blif
