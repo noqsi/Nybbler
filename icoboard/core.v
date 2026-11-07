@@ -72,7 +72,7 @@ module core (
 	parameter i_swap = 10 ;
 	parameter i_drop = 11 ;
 	parameter i_call = 12 ;
-	parameter i_literal = 13 ;
+	parameter i_push = 13 ;
 	parameter i_extend = 14 ;
 	parameter i_jump = 15 ;
 	
@@ -154,8 +154,7 @@ module core (
 	wire [11:0] number_out;
         wire number_write = running 
 		? instruction == i_swap && execute 
-			|| finish_literal 
-			|| push_random
+			|| finish_push 
 		: ( host_write && (mem_seg == 3));
 	wire [7:0] number_addr = running ? SP : mem_addr[7:0];
 
@@ -188,6 +187,11 @@ module core (
 	);
 	
 // Temp register for delayed operand handling
+// Used by instructions that push data to hold new TOS while old TOS
+// gets pushed to stack memory.
+
+// Used by call instruction to hold return address while PC gets pushed
+// to the return stack. 
 
 	reg [11:0] TEMP;
 	
@@ -195,21 +199,25 @@ module core (
 		if( execute )
 		case( instruction )
 		
-		i_literal : TEMP <= unsigned_arg;
+		i_push : TEMP <= unsigned_arg;
+		
+		i_extend : if( unsigned_arg == ix_random ) 
+			TEMP <= random_number;
 
 // Skip over address in two word call
 		
 		i_call : if( cycle == xeq3 ) TEMP <= PC + 1;
 				else TEMP <= PC;
-		
+						
 		endcase
 
 // Triggers for TEMP transfers
 		
-	reg finish_literal;
+	reg finish_push;
 	
 	always @( posedge( clk )) 
-		finish_literal = instruction == i_literal;
+		finish_push = instruction == i_push
+			|| instruction == i_extend && unsigned_arg == ix_random;
 	
 	reg finish_call;
 	
@@ -280,7 +288,7 @@ module core (
 		
 		i_extend : if( cycle == xeq3 ) PC <= PC + 1;
 		
-		i_literal : if( cycle == xeq3 ) PC <= PC + 1;
+		i_push : if( cycle == xeq3 ) PC <= PC + 1;
 		
 		endcase
 		else if( cycle == first ) PC <= PC + 1;
@@ -343,11 +351,9 @@ module core (
 			
 			ix_output : TOS <= number_out;
 			
-			ix_random : TOS <= random_number;
-			
 			endcase
 		endcase
-		else if( finish_literal ) TOS <= TEMP;
+		else if( finish_push ) TOS <= TEMP;
 
 		
 // Number stack pointer (SP)
@@ -363,7 +369,7 @@ module core (
 		else if( execute )
 		case( instruction )
 		
-		i_literal : SP <= SP + 1;
+		i_push : SP <= SP + 1;
 			
 		i_add : SP <= SP - 1;
 		
@@ -448,8 +454,12 @@ module core (
 // Pseudo-random number generation
 
 	wire [ 11 : 0 ] random_number;
-	wire push_random = execute & instruction == i_extend & unsigned_arg == ix_random;
-
+	reg push_random;
+	
+	always @( posedge( clk ))
+		push_random = 
+			instruction == i_extend & unsigned_arg == ix_random;
+	
 	prng randomness (
 		.seed( TOS ),
 		.reseed( execute & instruction == i_extend & unsigned_arg == ix_seed ),
@@ -461,21 +471,5 @@ module core (
 
 	assign status = {15'b0, running};
 
-// debug stuff
-	
-//	assign status = {8'b0, cycle == 0, cycle == 1, cycle == 2, cycle == 3, cycle == 4, cycle == 5, cycle == 6, running};
-/*
-	reg [15:0] toggles;
-	
-	always @( posedge( clk )) begin
-		if( finish_literal )
-			toggles[0] <= !toggles[0];
-		if( instruction == i_literal )
-			toggles[6:1] <= toggles[6:1] + 1;
-		if(  cycle == last )
-			toggles[7] <= !toggles[7];
-		end
-		
-	assign status = toggles;
-*/
+
 endmodule
